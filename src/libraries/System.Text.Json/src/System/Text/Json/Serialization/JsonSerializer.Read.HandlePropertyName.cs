@@ -13,95 +13,77 @@ namespace System.Text.Json
     {
         // AggressiveInlining used although a large method it is only called from one locations and is on a hot path.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void HandlePropertyName(
-            JsonSerializerOptions options,
+        internal static bool LookupProperty(
             ref Utf8JsonReader reader,
-            ref ReadStack state)
+            JsonSerializerOptions options,
+            ref ReadStack state,
+            out JsonPropertyInfo jsonPropertyInfo)
         {
-            if (state.Current.Drain)
+            Debug.Assert(state.Current.JsonClassInfo.ClassType == ClassType.Object);
+
+            ReadOnlySpan<byte> propertyName = reader.HasValueSequence ? reader.ValueSequence.ToArray() : reader.ValueSpan;
+            if (reader._stringHasEscaping)
             {
-                return;
+                int idx = propertyName.IndexOf(JsonConstants.BackSlash);
+                Debug.Assert(idx != -1);
+                propertyName = GetUnescapedString(propertyName, idx);
             }
 
-            Debug.Assert(state.Current.ReturnValue != null || state.Current.TempDictionaryValues != null);
-            Debug.Assert(state.Current.JsonClassInfo != null);
+            jsonPropertyInfo = state.Current.JsonClassInfo.GetProperty(propertyName, ref state.Current);
 
-            bool isProcessingDictObject = state.Current.IsProcessingObject(ClassType.Dictionary);
-            if ((isProcessingDictObject || state.Current.IsProcessingProperty(ClassType.Dictionary)) &&
-                state.Current.JsonClassInfo.DataExtensionProperty != state.Current.JsonPropertyInfo)
+            // Increment the PropertyIndex so JsonClassInfo.GetProperty() starts with the next property.
+            state.Current.PropertyIndex++;
+
+            // Determine if we should use the extension property.
+            if (jsonPropertyInfo == JsonPropertyInfo.s_missingProperty)
             {
-                if (isProcessingDictObject)
+                JsonPropertyInfo? dataExtProperty = state.Current.JsonClassInfo.DataExtensionProperty;
+                if (dataExtProperty == null)
                 {
-                    state.Current.JsonPropertyInfo = state.Current.JsonClassInfo.PolicyProperty;
-                }
-
-                state.Current.KeyName = reader.GetString();
-            }
-            else
-            {
-                Debug.Assert(state.Current.JsonClassInfo.ClassType == ClassType.Object);
-
-                state.Current.EndProperty();
-
-                ReadOnlySpan<byte> propertyName = reader.HasValueSequence ? reader.ValueSequence.ToArray() : reader.ValueSpan;
-                if (reader._stringHasEscaping)
-                {
-                    int idx = propertyName.IndexOf(JsonConstants.BackSlash);
-                    Debug.Assert(idx != -1);
-                    propertyName = GetUnescapedString(propertyName, idx);
-                }
-
-                JsonPropertyInfo jsonPropertyInfo = state.Current.JsonClassInfo.GetProperty(propertyName, ref state.Current);
-                if (jsonPropertyInfo == JsonPropertyInfo.s_missingProperty)
-                {
-                    JsonPropertyInfo? dataExtProperty = state.Current.JsonClassInfo!.DataExtensionProperty;
-                    if (dataExtProperty == null)
-                    {
-                        state.Current.JsonPropertyInfo = JsonPropertyInfo.s_missingProperty;
-                    }
-                    else
-                    {
-                        state.Current.JsonPropertyInfo = dataExtProperty;
-                        state.Current.JsonPropertyName = propertyName.ToArray();
-                        state.Current.KeyName = JsonHelpers.Utf8GetString(propertyName);
-                        state.Current.CollectionPropertyInitialized = true;
-
-                        CreateDataExtensionProperty(dataExtProperty, ref state);
-                    }
+                    jsonPropertyInfo = JsonPropertyInfo.s_missingProperty;
                 }
                 else
                 {
-                    // Support JsonException.Path.
-                    Debug.Assert(
-                        jsonPropertyInfo.JsonPropertyName == null ||
-                        options.PropertyNameCaseInsensitive ||
-                        propertyName.SequenceEqual(jsonPropertyInfo.JsonPropertyName));
+                    jsonPropertyInfo = dataExtProperty;
+                    state.Current.JsonPropertyName = propertyName.ToArray();
+                    state.Current.KeyName = JsonHelpers.Utf8GetString(propertyName);
 
-                    state.Current.JsonPropertyInfo = jsonPropertyInfo;
-
-                    if (jsonPropertyInfo.JsonPropertyName == null)
-                    {
-                        byte[] propertyNameArray = propertyName.ToArray();
-                        if (options.PropertyNameCaseInsensitive)
-                        {
-                            // Each payload can have a different name here; remember the value on the temporary stack.
-                            state.Current.JsonPropertyName = propertyNameArray;
-                        }
-                        else
-                        {
-                            // Prevent future allocs by caching globally on the JsonPropertyInfo which is specific to a Type+PropertyName
-                            // so it will match the incoming payload except when case insensitivity is enabled (which is handled above).
-                            state.Current.JsonPropertyInfo.JsonPropertyName = propertyNameArray;
-                        }
-                    }
+                    CreateDataExtensionProperty(dataExtProperty, ref state);
                 }
 
-                // Increment the PropertyIndex so JsonClassInfo.GetProperty() starts with the next property.
-                state.Current.PropertyIndex++;
+                state.Current.JsonPropertyInfo = jsonPropertyInfo;
+                return true;
             }
+
+            // Support JsonException.Path.
+            Debug.Assert(
+                jsonPropertyInfo.JsonPropertyName == null ||
+                options.PropertyNameCaseInsensitive ||
+                propertyName.SequenceEqual(jsonPropertyInfo.JsonPropertyName));
+
+            state.Current.JsonPropertyInfo = jsonPropertyInfo;
+
+            if (jsonPropertyInfo.JsonPropertyName == null)
+            {
+                byte[] propertyNameArray = propertyName.ToArray();
+                if (options.PropertyNameCaseInsensitive)
+                {
+                    // Each payload can have a different name here; remember the value on the temporary stack.
+                    state.Current.JsonPropertyName = propertyNameArray;
+                }
+                else
+                {
+                    // Prevent future allocs by caching globally on the JsonPropertyInfo which is specific to a Type+PropertyName
+                    // so it will match the incoming payload except when case insensitivity is enabled (which is handled above).
+                    state.Current.JsonPropertyInfo.JsonPropertyName = propertyNameArray;
+                }
+            }
+
+            state.Current.JsonPropertyInfo = jsonPropertyInfo;
+            return false;
         }
 
-        private static void CreateDataExtensionProperty(
+        internal static void CreateDataExtensionProperty(
             JsonPropertyInfo jsonPropertyInfo,
             ref ReadStack state)
         {

@@ -70,17 +70,18 @@ namespace System.Text.Json
                 }
 
                 WriteStack state = default;
-                state.Current.Initialize(inputType, options);
+                state.Current.InitializeRoot(inputType, options);
                 state.Current.CurrentValue = value;
 
+                // Ensures converters support contination due to having to re-populate the buffer from a Stream.
+                state.SupportContinuation = true;
+
                 bool isFinalBlock;
-                int flushThreshold;
 
                 do
                 {
-                    flushThreshold = (int)(bufferWriter.Capacity * .9); //todo: determine best value here
-
-                    isFinalBlock = Write(writer, originalWriterDepth: 0, flushThreshold, options, ref state);
+                    state.FlushThreshold = (int)(bufferWriter.Capacity * .9); //todo: determine best value here
+                    isFinalBlock = WriteCore(writer, state.Current.CurrentValue, options, ref state, state.Current.JsonClassInfo!.PolicyProperty!.ConverterBase);
                     writer.Flush();
 
                     await bufferWriter.WriteToStreamAsync(utf8Json, cancellationToken).ConfigureAwait(false);

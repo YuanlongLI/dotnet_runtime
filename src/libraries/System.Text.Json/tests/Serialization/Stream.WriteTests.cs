@@ -558,7 +558,7 @@ namespace System.Text.Json.Serialization.Tests
                         Name = "Surface Pro",
                         SKU = "LL123" + j,
                         Brand = new TestClassWithInitializedProperties(),
-                        ProductCategory = new SimpleTestClassWithNonGenericCollectionWrappers(),
+                        // ProductCategory = new SimpleTestClassWithNonGenericCollectionWrappers(),
                         Description = "Down, down, down. Would the fall never come to an end! ‘I wonder how many miles I’ve fallen by this time. I think—’ (for, you see, Alice had learnt several things of this sort in her lessons in the schoolroom, and though this was not a very good opportunity for showing off her knowledge, as there was no one to listen to her, still it was good practice to say it over) ‘—yes, that’s about the right distance—but then I wonder what Latitude or Longitude I’ve got to",
                         Created = new DateTime(2000, 10, 12),
                         Title = "Surface Pro 6 for Business - 512GB",
@@ -567,7 +567,7 @@ namespace System.Text.Json.Serialization.Tests
                         AverageStars = 4.8f,
                         Featured = true,
                         ProductRestrictions = new TestClassWithInitializedProperties(),
-                        SalesInfo = new SimpleTestClassWithGenericCollectionWrappers(),
+                        // SalesInfo = new SimpleTestClassWithGenericCollectionWrappers(),
                         Origin = SampleEnum.One,
                         Manufacturer = new BasicCompany(),
                         Fragile = true,
@@ -587,7 +587,7 @@ namespace System.Text.Json.Serialization.Tests
                         IsActive = true,
                         RelatedProducts = new List<Product>()
                     };
-                    product.SalesInfo.Initialize();
+                    // product.SalesInfo.Initialize();
                     List<Review> reviews = new List<Review>();
                     for (int k = 0; k < i % 3; k++)
                     {

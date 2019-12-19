@@ -13,15 +13,17 @@ namespace System.Text.Json
     /// </remarks>
     internal enum ClassType : byte
     {
-        // typeof(object)
-        Unknown = 0x1,
-        // POCO or rich data type
-        Object = 0x2,
-        // Value or object with a converter.
-        Value = 0x4,
-        // IEnumerable
+        // JsonObjectConverter<>.
+        Object = 0x1,
+        // JsonConverter<>.
+        Value = 0x2,
+        // JsonValueConverter<>.
+        NewValue = 0x4,
+        // JsonArrayConverter<>.
         Enumerable = 0x8,
-        // IDictionary
+        // JsonDictionaryConverter<,>.
         Dictionary = 0x10,
+        // Invalid (not used directly for serialization)
+        Invalid = 0x20
     }
 }

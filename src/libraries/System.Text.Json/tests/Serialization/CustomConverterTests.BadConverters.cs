@@ -151,8 +151,8 @@ namespace System.Text.Json.Serialization.Tests
             var options = new JsonSerializerOptions();
             options.Converters.Add(new ConverterThatReturnsNull());
 
-            Assert.Throws<ArgumentNullException>(() => JsonSerializer.Serialize(0, options));
-            Assert.Throws<ArgumentNullException>(() => JsonSerializer.Deserialize<int>("0", options));
+            Assert.Throws<NotSupportedException>(() => JsonSerializer.Serialize(0, options));
+            Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<int>("0", options));
         }
 
         private class Level1
@@ -232,8 +232,8 @@ namespace System.Text.Json.Serialization.Tests
             }
             catch (JsonException ex)
             {
-                Assert.Contains("$.Level2.Level3s[1]", ex.ToString());
-                Assert.Equal("$.Level2.Level3s[1]", ex.Path);
+                Assert.Contains("$.Level2.Level3s[0]", ex.ToString());
+                Assert.Equal("$.Level2.Level3s[0]", ex.Path);
             }
         }
 
@@ -252,8 +252,8 @@ namespace System.Text.Json.Serialization.Tests
             }
             catch (JsonException ex)
             {
-                Assert.Contains("$.Level2.Level3s[1]", ex.ToString());
-                Assert.Equal("$.Level2.Level3s[1]", ex.Path);
+                Assert.Contains("$.Level2.Level3s[0]", ex.ToString());
+                Assert.Equal("$.Level2.Level3s[0]", ex.Path);
             }
         }
 

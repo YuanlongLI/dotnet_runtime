@@ -34,7 +34,7 @@ namespace System.Text.Json.Serialization.Tests.Schemas.OrderPayload
         public Guid ProductId { get; set; }
         public string SKU { get; set; }
         public TestClassWithInitializedProperties Brand { get; set; }
-        public SimpleTestClassWithNonGenericCollectionWrappers ProductCategory { get; set; }
+        // public SimpleTestClassWithNonGenericCollectionWrappers ProductCategory { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Title { get; set; }
@@ -43,7 +43,7 @@ namespace System.Text.Json.Serialization.Tests.Schemas.OrderPayload
         public float AverageStars { get; set; }  
         public bool Featured { get; set; }
         public TestClassWithInitializedProperties ProductRestrictions { get; set; }
-        public SimpleTestClassWithGenericCollectionWrappers SalesInfo { get; set; }
+        // public SimpleTestClassWithGenericCollectionWrappers SalesInfo { get; set; }
         public IEnumerable<Review> Reviews { get; set; }
         public SampleEnum Origin { get; set; }
         public BasicCompany Manufacturer { get; set; }

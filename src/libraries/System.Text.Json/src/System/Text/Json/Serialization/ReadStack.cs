@@ -17,39 +17,148 @@ namespace System.Text.Json
         public ReadStackFrame Current;
 
         private List<ReadStackFrame> _previous;
-        public int _index;
 
-        public void Push()
+        /// <summary>
+        /// The number of stack frames including Current. _previous will contain _count-1 higher frames.
+        /// </summary>
+        private int _count;
+
+        /// <summary>
+        /// The number of stack frames when the continuation started.
+        /// </summary>
+        private int _continuationCount;
+
+        // Support the read-ahead feature.
+        public JsonReaderState InitialReaderState;
+        public long InitialReaderBytesConsumed;
+
+        private void AddCurrent()
         {
             if (_previous == null)
             {
                 _previous = new List<ReadStackFrame>();
             }
 
-            if (_index == _previous.Count)
+            if (_count > _previous.Count)
             {
                 // Need to allocate a new array element.
                 _previous.Add(Current);
             }
             else
             {
-                Debug.Assert(_index < _previous.Count);
-
                 // Use a previously allocated slot.
-                _previous[_index] = Current;
+                _previous[_count - 1] = Current;
             }
 
-            Current.Reset();
-            _index++;
+            _count++;
         }
 
-        public void Pop()
+        public bool IsContinuation => _continuationCount != 0;
+        public bool IsLastContinuation => _continuationCount == _count;
+
+        public void Push()
         {
-            Debug.Assert(_index > 0);
-            Current = _previous[--_index];
+            if (_continuationCount == 0)
+            {
+                if (_count == 0)
+                {
+                    // The first stack frame is held in Current.
+                    _count = 1;
+                }
+                else
+                {
+                    JsonClassInfo jsonClassInfo;
+                    if ((Current.JsonClassInfo.ClassType & (ClassType.Object | ClassType.Value | ClassType.NewValue)) != 0)
+                    {
+                        // Although ClassType.Value doesn't push, a custom custom converter may re-enter serialization.
+                        jsonClassInfo = Current.JsonPropertyInfo.RuntimeClassInfo;
+                    }
+                    else
+                    {
+                        jsonClassInfo = Current.JsonClassInfo.ElementClassInfo!;
+                    }
+
+                    AddCurrent();
+                    Current.Reset();
+
+                    Current.JsonClassInfo = jsonClassInfo;
+                    Current.JsonPropertyInfo = jsonClassInfo.PolicyProperty!;
+                }
+            }
+            else if (_continuationCount == 1)
+            {
+                // No need for a push since there is only one stack frame.
+                Debug.Assert(_count == 1);
+                _continuationCount = 0;
+            }
+            else
+            {
+                // A continuation, adjust the index.
+                Current = _previous[_count - 1];
+
+                // Check if we are done.
+                if (_count == _continuationCount)
+                {
+                    _continuationCount = 0;
+                }
+                else
+                {
+                    _count++;
+                }
+            }
         }
 
-        public bool IsLastFrame => _index == 0;
+        public void Pop(bool success)
+        {
+            Debug.Assert(_count > 0);
+
+            if (!success)
+            {
+                // Check if we need to initialize the continuation.
+                if (_continuationCount == 0)
+                {
+                    if (_count == 1)
+                    {
+                        // No need for a continuation since there is only one stack frame.
+                        _continuationCount = 1;
+                        _count = 1;
+                    }
+                    else
+                    {
+                        AddCurrent();
+                        _count--;
+                        _continuationCount = _count;
+                        _count--;
+                        Current = _previous[_count - 1];
+                    }
+
+                    return;
+                }
+
+                if (_continuationCount == 1)
+                {
+                    // No need for a pop since there is only one stack frame.
+                    Debug.Assert(_count == 1);
+                    return;
+                }
+
+                // Update the list entry to the current value.
+                _previous[_count - 1] = Current;
+
+                Debug.Assert(_count > 0);
+            }
+            else
+            {
+                Debug.Assert(_continuationCount == 0);
+            }
+
+            if (_count > 1)
+            {
+                Current = _previous[--_count -1];
+            }
+        }
+
+        public bool IsLastFrame => _count == 0;
 
         // Return a JSONPath using simple dot-notation when possible. When special characters are present, bracket-notation is used:
         // $.x.y[0].z
@@ -58,12 +167,19 @@ namespace System.Text.Json
         {
             StringBuilder sb = new StringBuilder("$");
 
-            for (int i = 0; i < _index; i++)
+            // If a continuation, always report back full stack.
+            int count = Math.Max(_count, _continuationCount);
+
+            for (int i = 0; i < count - 1; i++)
             {
                 AppendStackFrame(sb, _previous[i]);
             }
 
-            AppendStackFrame(sb, Current);
+            if (_continuationCount == 0)
+            {
+                AppendStackFrame(sb, Current);
+            }
+
             return sb.ToString();
         }
 
@@ -82,20 +198,32 @@ namespace System.Text.Json
                 }
                 else if (frame.IsProcessingEnumerable())
                 {
-                    IList? list = frame.TempEnumerableValues;
-                    if (list == null && frame.ReturnValue != null)
-                    {
-
-                        list = (IList?)frame.JsonPropertyInfo?.GetValueAsObject(frame.ReturnValue);
-                    }
-                    if (list != null)
+                    IEnumerable enumerable = (IEnumerable)frame.ReturnValue!;
+                    if (enumerable != null)
                     {
                         sb.Append(@"[");
-                        sb.Append(list.Count);
+                        sb.Append(GetCount(enumerable));
                         sb.Append(@"]");
                     }
                 }
             }
+        }
+
+        private static int GetCount(IEnumerable enumerable)
+        {
+            if (enumerable is ICollection collection)
+            {
+                return collection.Count;
+            }
+
+            int count = 0;
+            IEnumerator enumerator = enumerable.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                count++;
+            }
+
+            return count;
         }
 
         private void AppendPropertyName(StringBuilder sb, string? propertyName)
@@ -118,22 +246,24 @@ namespace System.Text.Json
 
         private string? GetPropertyName(in ReadStackFrame frame)
         {
+            string? propertyName = null;
+
             // Attempt to get the JSON property name from the frame.
             byte[]? utf8PropertyName = frame.JsonPropertyName;
             if (utf8PropertyName == null)
             {
                 // Attempt to get the JSON property name from the JsonPropertyInfo.
                 utf8PropertyName = frame.JsonPropertyInfo?.JsonPropertyName;
+                if (utf8PropertyName == null)
+                {
+                    // Attempt to get the JSON property name from the property name specified in re-entry.
+                    propertyName = frame.JsonPropertyNameAsString;
+                }
             }
 
-            string? propertyName;
             if (utf8PropertyName != null)
             {
                 propertyName = JsonHelpers.Utf8GetString(utf8PropertyName);
-            }
-            else
-            {
-                propertyName = null;
             }
 
             return propertyName;
@@ -148,5 +278,10 @@ namespace System.Text.Json
         /// Internal flag to let us know that we need to read ahead in the inner read loop.
         /// </summary>
         internal bool ReadAhead;
+
+        /// <summary>
+        /// Internal flag to let us know that we need to read ahead in the inner read loop.
+        /// </summary>
+        internal bool SupportContinuation;
     }
 }

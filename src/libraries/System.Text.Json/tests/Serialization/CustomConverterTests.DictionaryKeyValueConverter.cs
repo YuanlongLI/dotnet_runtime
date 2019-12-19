@@ -195,7 +195,6 @@ namespace System.Text.Json.Serialization.Tests
             string json = JsonSerializer.Serialize(obj, options);
             obj = JsonSerializer.Deserialize<ClassWithDictionaries>(json, options);
 
-            // Verify.
             Verify();
         }
 

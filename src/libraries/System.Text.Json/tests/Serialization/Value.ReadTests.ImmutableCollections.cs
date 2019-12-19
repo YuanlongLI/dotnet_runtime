@@ -12,6 +12,7 @@ namespace System.Text.Json.Serialization.Tests
 {
     public static partial class ValueTests
     {
+        /*
         [Fact]
         public static void ReadImmutableArrayOfImmutableArray()
         {
@@ -634,5 +635,6 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<SimpleTestClassWithImmutableQueueWrapper>(SimpleTestClassWithImmutableQueueWrapper.s_json));
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<SimpleTestClassWithImmutableSetWrapper>(SimpleTestClassWithImmutableSetWrapper.s_json));
         }
+        */
     }
 }

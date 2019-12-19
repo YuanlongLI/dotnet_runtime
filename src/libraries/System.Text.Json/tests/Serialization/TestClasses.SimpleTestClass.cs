@@ -73,13 +73,14 @@ namespace System.Text.Json.Serialization.Tests
         public IEnumerable<string> MyStringIEnumerableT { get; set; }
         public IList<string> MyStringIListT { get; set; }
         public ICollection<string> MyStringICollectionT { get; set; }
-        public IReadOnlyCollection<string> MyStringIReadOnlyCollectionT { get; set; }
-        public IReadOnlyList<string> MyStringIReadOnlyListT { get; set; }
-        public ISet<string> MyStringISetT { get; set; }
+        //public IReadOnlyCollection<string> MyStringIReadOnlyCollectionT { get; set; }
+        //public IReadOnlyList<string> MyStringIReadOnlyListT { get; set; }
+        //public ISet<string> MyStringISetT { get; set; }
         public KeyValuePair<string, string> MyStringToStringKeyValuePair { get; set; }
         public IDictionary MyStringToStringIDict { get; set; }
         public Dictionary<string, string> MyStringToStringGenericDict { get; set; }
         public IDictionary<string, string> MyStringToStringGenericIDict { get; set; }
+        /*
         public IReadOnlyDictionary<string, string> MyStringToStringGenericIReadOnlyDict { get; set; }
         public ImmutableDictionary<string, string> MyStringToStringImmutableDict { get; set; }
         public IImmutableDictionary<string, string> MyStringToStringIImmutableDict { get; set; }
@@ -98,6 +99,7 @@ namespace System.Text.Json.Serialization.Tests
         public ImmutableStack<string> MyStringImmutableStackT { get; set; }
         public ImmutableQueue<string> MyStringImmutablQueueT { get; set; }
         public ImmutableSortedSet<string> MyStringImmutableSortedSetT { get; set; }
+        */
         public List<string> MyListOfNullString { get; set; }
 
         public static readonly string s_json = $"{{{s_partialJsonProperties},{s_partialJsonArrays}}}";
@@ -130,10 +132,10 @@ namespace System.Text.Json.Serialization.Tests
                 @"""MyStringToStringIDict"" : {""key"" : ""value""}," +
                 @"""MyStringToStringGenericDict"" : {""key"" : ""value""}," +
                 @"""MyStringToStringGenericIDict"" : {""key"" : ""value""}," +
-                @"""MyStringToStringGenericIReadOnlyDict"" : {""key"" : ""value""}," +
-                @"""MyStringToStringImmutableDict"" : {""key"" : ""value""}," +
-                @"""MyStringToStringIImmutableDict"" : {""key"" : ""value""}," +
-                @"""MyStringToStringImmutableSortedDict"" : {""key"" : ""value""}," +
+                //@"""MyStringToStringGenericIReadOnlyDict"" : {""key"" : ""value""}," +
+                //@"""MyStringToStringImmutableDict"" : {""key"" : ""value""}," +
+                //@"""MyStringToStringIImmutableDict"" : {""key"" : ""value""}," +
+                //@"""MyStringToStringImmutableSortedDict"" : {""key"" : ""value""}," +
                 @"""MySimpleStruct"" : {""One"" : 11, ""Two"" : 1.9999, ""Three"" : 33}," +
                 @"""MySimpleTestStruct"" : {""MyInt64"" : 64, ""MyString"" :""Hello"", ""MyInt32Array"" : [32]}";
 
@@ -169,6 +171,7 @@ namespace System.Text.Json.Serialization.Tests
                 @"""MyStringIEnumerableT"" : [""Hello""]," +
                 @"""MyStringIListT"" : [""Hello""]," +
                 @"""MyStringICollectionT"" : [""Hello""]," +
+                /*
                 @"""MyStringIReadOnlyCollectionT"" : [""Hello""]," +
                 @"""MyStringIReadOnlyListT"" : [""Hello""]," +
                 @"""MyStringISetT"" : [""Hello""]," +
@@ -186,6 +189,7 @@ namespace System.Text.Json.Serialization.Tests
                 @"""MyStringImmutableStackT"" : [""Hello""]," +
                 @"""MyStringImmutablQueueT"" : [""Hello""]," +
                 @"""MyStringImmutableSortedSetT"" : [""Hello""]," +
+                */
                 @"""MyListOfNullString"" : [null]";
 
         public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
@@ -272,15 +276,16 @@ namespace System.Text.Json.Serialization.Tests
             MyStringIEnumerableT = new string[] { "Hello" };
             MyStringIListT = new string[] { "Hello" };
             MyStringICollectionT = new string[] { "Hello" };
-            MyStringIReadOnlyCollectionT = new string[] { "Hello" };
-            MyStringIReadOnlyListT = new string[] { "Hello" };
-            MyStringISetT = new HashSet<string> { "Hello" };
+            //MyStringIReadOnlyCollectionT = new string[] { "Hello" };
+            //MyStringIReadOnlyListT = new string[] { "Hello" };
+            //MyStringISetT = new HashSet<string> { "Hello" };
 
             MyStringToStringKeyValuePair = new KeyValuePair<string, string>("myKey", "myValue");
             MyStringToStringIDict = new Dictionary<string, string> { { "key", "value" } };
 
             MyStringToStringGenericDict = new Dictionary<string, string> { { "key", "value" } };
             MyStringToStringGenericIDict = new Dictionary<string, string> { { "key", "value" } };
+            /*
             MyStringToStringGenericIReadOnlyDict = new Dictionary<string, string> { { "key", "value" } };
 
             MyStringToStringImmutableDict = ImmutableDictionary.CreateRange(MyStringToStringGenericDict);
@@ -302,6 +307,7 @@ namespace System.Text.Json.Serialization.Tests
             MyStringImmutableStackT = ImmutableStack.CreateRange(new List<string> { "Hello" });
             MyStringImmutablQueueT = ImmutableQueue.CreateRange(new List<string> { "Hello" });
             MyStringImmutableSortedSetT = ImmutableSortedSet.CreateRange(new List<string> { "Hello" });
+            */
 
             MyListOfNullString = new List<string> { null };
         }
@@ -433,9 +439,9 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal("Hello", MyStringIEnumerableT.First());
             Assert.Equal("Hello", MyStringIListT[0]);
             Assert.Equal("Hello", MyStringICollectionT.First());
-            Assert.Equal("Hello", MyStringIReadOnlyCollectionT.First());
-            Assert.Equal("Hello", MyStringIReadOnlyListT[0]);
-            Assert.Equal("Hello", MyStringISetT.First());
+            //Assert.Equal("Hello", MyStringIReadOnlyCollectionT.First());
+            //Assert.Equal("Hello", MyStringIReadOnlyListT[0]);
+            //Assert.Equal("Hello", MyStringISetT.First());
 
             enumerator = MyStringToStringIDict.GetEnumerator();
             enumerator.MoveNext();
@@ -470,15 +476,16 @@ namespace System.Text.Json.Serialization.Tests
 
             Assert.Equal("value", MyStringToStringGenericDict["key"]);
             Assert.Equal("value", MyStringToStringGenericIDict["key"]);
-            Assert.Equal("value", MyStringToStringGenericIReadOnlyDict["key"]);
+            //Assert.Equal("value", MyStringToStringGenericIReadOnlyDict["key"]);
 
-            Assert.Equal("value", MyStringToStringImmutableDict["key"]);
-            Assert.Equal("value", MyStringToStringIImmutableDict["key"]);
-            Assert.Equal("value", MyStringToStringImmutableSortedDict["key"]);
+            //Assert.Equal("value", MyStringToStringImmutableDict["key"]);
+            //Assert.Equal("value", MyStringToStringIImmutableDict["key"]);
+            //Assert.Equal("value", MyStringToStringImmutableSortedDict["key"]);
 
             Assert.Equal("myKey", MyStringToStringKeyValuePair.Key);
             Assert.Equal("myValue", MyStringToStringKeyValuePair.Value);
 
+            /*
             Assert.Equal(2, MyStringStackT.Count);
             Assert.True(MyStringStackT.Contains("Hello"));
             Assert.True(MyStringStackT.Contains("World"));
@@ -504,6 +511,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal("Hello", MyStringImmutableStackT.First());
             Assert.Equal("Hello", MyStringImmutablQueueT.First());
             Assert.Equal("Hello", MyStringImmutableSortedSetT.First());
+            */
 
             Assert.Null(MyListOfNullString[0]);
         }
