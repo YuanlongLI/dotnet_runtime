@@ -36,17 +36,20 @@ namespace System.Text.Json.Serialization
             }
         }
 
-
         /// <summary>
         /// Adds an entry to the bag of references using the specified id and value.
         /// This method gets called when an $id metadata property from a JSON object is read.
         /// </summary>
         /// <param name="referenceId">The identifier of the respective JSON object or array.</param>
         /// <param name="value">The value of the respective CLR reference type object that results from parsing the JSON object.</param>
-        public void AddReferenceOnDeserialize(string referenceId, object value)
+        /// <param name="state">The current read state.</param>
+        public void AddReferenceOnDeserialize(string referenceId, object value, ref ReadStack state)
         {
             if (!JsonHelpers.TryAdd(_referenceIdToObjectMap!, referenceId, value))
             {
+                // Re-set MetadataPropertyName.Id so JsonPath contains $id.
+                state.Current.MetadataPropertyName = MetadataPropertyName.Id;
+
                 ThrowHelper.ThrowJsonException_MetadataDuplicateIdFound(referenceId);
             }
         }
