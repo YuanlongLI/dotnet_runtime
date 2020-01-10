@@ -6,17 +6,18 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class JsonDictionaryOfStringTValueConverter<TCollection, TValue> : JsonDictionaryDefaultConverter<TCollection, TValue> where TCollection : Dictionary<string, TValue>, new()
+    internal sealed class JsonDictionaryOfStringTValueConverter<TCollection, TValue> : JsonDictionaryDefaultConverter<TCollection, TValue>
+        where TCollection : Dictionary<string, TValue>, new()
     {
-        protected override void CreateCollection(ref ReadStack state)
-        {
-            state.Current.ReturnValue = new TCollection();
-        }
-
         protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
         {
             string key = state.Current.KeyName!;
             ((TCollection)state.Current.ReturnValue!)[key] = value;
+        }
+
+        protected override void CreateCollection(ref ReadStack state)
+        {
+            state.Current.ReturnValue = new TCollection();
         }
 
         protected internal override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)

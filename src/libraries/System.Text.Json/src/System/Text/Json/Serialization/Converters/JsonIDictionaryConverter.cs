@@ -7,8 +7,15 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class JsonIDictionaryConverter<TCollection> : JsonDictionaryDefaultConverter<TCollection, object> where TCollection : IDictionary
+    internal sealed class JsonIDictionaryConverter<TCollection> : JsonDictionaryDefaultConverter<TCollection, object>
+        where TCollection : IDictionary
     {
+        protected override void Add(object value, JsonSerializerOptions options, ref ReadStack state)
+        {
+            string key = state.Current.KeyName!;
+            ((IDictionary)state.Current.ReturnValue!)[key] = value;
+        }
+
         protected override void CreateCollection(ref ReadStack state)
         {
             JsonClassInfo classInfo = state.Current.JsonClassInfo;
@@ -21,12 +28,6 @@ namespace System.Text.Json.Serialization.Converters
             {
                 state.Current.ReturnValue = classInfo.CreateObject!();
             }
-        }
-
-        protected override void Add(object value, JsonSerializerOptions options, ref ReadStack state)
-        {
-            string key = state.Current.KeyName!;
-            ((IDictionary)state.Current.ReturnValue!)[key] = value;
         }
 
         protected internal override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
@@ -50,8 +51,9 @@ namespace System.Text.Json.Serialization.Converters
             {
                 if (!(enumerator.Key is string key))
                 {
-                    // todo: or throw NotSupportedException?
+                    // todo: add test for this.
                     ThrowHelper.ThrowJsonException_DeserializeUnableToConvertValue(state.Current.DeclaredJsonPropertyInfo.RuntimePropertyType!);
+                    Diagnostics.Debug.Assert(false);
                     return false;
                 }
 

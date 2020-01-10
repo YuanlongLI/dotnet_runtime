@@ -7,8 +7,14 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class JsonIListConverter<TCollection> : JsonIEnumerableDefaultConverter<TCollection, object> where TCollection : IList
+    internal sealed class JsonIListConverter<TCollection> : JsonIEnumerableDefaultConverter<TCollection, object>
+        where TCollection : IList
     {
+        protected override void Add(object value, ref ReadStack state)
+        {
+            ((IList)state.Current.ReturnValue!).Add(value);
+        }
+
         protected override void CreateCollection(ref ReadStack state)
         {
             JsonClassInfo classInfo = state.Current.JsonClassInfo;
@@ -21,11 +27,6 @@ namespace System.Text.Json.Serialization.Converters
             {
                 state.Current.ReturnValue = classInfo.CreateObject!();
             }
-        }
-
-        protected override void Add(object value, ref ReadStack state)
-        {
-            ((IList)state.Current.ReturnValue!).Add(value);
         }
 
         protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)

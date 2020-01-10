@@ -13,15 +13,15 @@ namespace System.Text.Json
     /// </remarks>
     internal enum ClassType : byte
     {
-        // JsonObjectConverter<>.
+        // JsonObjectConverter<> - objects with properties.
         Object = 0x1,
-        // JsonConverter<>.
+        // JsonConverter<> - simple values.
         Value = 0x2,
-        // JsonValueConverter<>.
+        // JsonValueConverter<> - simple values that need to re-enter the serializer such as KeyValuePair<TKey, TValue>.
         NewValue = 0x4,
-        // JsonArrayConverter<>.
+        // JsonArrayConverter<> - all enumerable collections except dictionaries.
         Enumerable = 0x8,
-        // JsonDictionaryConverter<,>.
+        // JsonDictionaryConverter<,> - dictionary types.
         Dictionary = 0x10,
         // Invalid (not used directly for serialization)
         Invalid = 0x20

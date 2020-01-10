@@ -20,7 +20,7 @@ namespace System.Text.Json.Serialization
             JsonConverter? valueConverter = options.GetConverter(valueTypeToConvert);
             if (valueConverter == null)
             {
-                // todo: NotSupportedException instead?
+                // todo: add test for this
                 ThrowHelper.ThrowJsonException_DeserializeUnableToConvertValue(valueTypeToConvert);
             }
 

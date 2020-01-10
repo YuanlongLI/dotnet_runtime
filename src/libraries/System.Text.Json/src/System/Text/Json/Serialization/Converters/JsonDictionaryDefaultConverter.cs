@@ -8,9 +8,48 @@ namespace System.Text.Json.Serialization.Converters
 {
     internal abstract class JsonDictionaryDefaultConverter<TCollection, TValue> : JsonDictionaryConverter<TCollection>
     {
-        private Type _elementType = typeof(TValue);
+        protected abstract void Add(TValue value, JsonSerializerOptions options, ref ReadStack state);
+        protected virtual void ConvertCollection(ref ReadStack state) { }
+        protected virtual void CreateCollection(ref ReadStack state) { }
+        internal override Type ElementType => typeof(TValue);
 
-        internal override Type ElementType => _elementType;
+        protected static JsonConverter<TValue> GetElementConverter(ref ReadStack state)
+        {
+            JsonConverter<TValue>? converter = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase as JsonConverter<TValue>;
+            if (converter == null)
+            {
+                state.Current.JsonClassInfo.ElementClassInfo.PolicyProperty.ThrowCollectionNotSupportedException();
+            }
+
+            return converter!;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected string GetKeyName(string key, ref WriteStack state, JsonSerializerOptions options)
+        {
+            if (options.DictionaryKeyPolicy != null && !state.Current.IgnoreDictionaryKeyPolicy)
+            {
+                key = options.DictionaryKeyPolicy.ConvertName(key);
+
+                if (key == null)
+                {
+                    ThrowHelper.ThrowInvalidOperationException_SerializerDictionaryKeyNull(options.DictionaryKeyPolicy.GetType());
+                }
+            }
+
+            return key;
+        }
+
+        protected JsonConverter<TValue> GetValueConverter(ref WriteStack state)
+        {
+            JsonConverter<TValue> converter = (JsonConverter<TValue>)state.Current.DeclaredJsonPropertyInfo.ConverterBase;
+            if (converter == null)
+            {
+                state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ThrowCollectionNotSupportedException();
+            }
+
+            return converter!;
+        }
 
         internal override sealed bool OnTryRead(
             ref Utf8JsonReader reader,
@@ -32,10 +71,8 @@ namespace System.Text.Json.Serialization.Converters
                 CreateCollection(ref state);
 
                 JsonConverter<TValue> elementConverter = GetElementConverter(ref state);
-
                 if (elementConverter.CanUseDirectReadOrWrite)
                 {
-                    // Fast path that avoids validation and extra indirection.
                     while (true)
                     {
                         // Read the key name.
@@ -53,10 +90,9 @@ namespace System.Text.Json.Serialization.Converters
 
                         state.Current.KeyName = reader.GetString();
 
-                        // Read the value.
+                        // Read the value and add.
                         reader.Read();
-
-                        TValue element = elementConverter.Read(ref reader, _elementType, options);
+                        TValue element = elementConverter.Read(ref reader, typeof(TValue), options);
                         Add(element, options, ref state);
                     }
                 }
@@ -79,11 +115,9 @@ namespace System.Text.Json.Serialization.Converters
 
                         state.Current.KeyName = reader.GetString();
 
-                        // Read the value.
+                        // Read the value and add.
                         reader.Read();
-
-                        elementConverter.TryRead(ref reader, _elementType, options, ref state, out TValue element);
-
+                        elementConverter.TryRead(ref reader, typeof(TValue), options, ref state, out TValue element);
                         Add(element, options, ref state);
                     }
                 }
@@ -148,8 +182,8 @@ namespace System.Text.Json.Serialization.Converters
 
                     if (state.Current.ProcessedPropertyState < StackFramePropertyState.Value)
                     {
-                        // Read the value.
-                        bool success = elementConverter.TryRead(ref reader, _elementType, options, ref state, out TValue element);
+                        // Read the value and add.
+                        bool success = elementConverter.TryRead(ref reader, typeof(TValue), options, ref state, out TValue element);
                         if (!success)
                         {
                             value = default!;
@@ -202,48 +236,5 @@ namespace System.Text.Json.Serialization.Converters
 
             return success;
         }
-
-        protected abstract void Add(TValue value, JsonSerializerOptions options, ref ReadStack state);
-
-        protected static JsonConverter<TValue> GetElementConverter(ref ReadStack state)
-        {
-            JsonConverter<TValue>? converter = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase as JsonConverter<TValue>;
-            if (converter == null)
-            {
-                state.Current.JsonClassInfo.ElementClassInfo.PolicyProperty.ThrowCollectionNotSupportedException();
-            }
-
-            return converter!;
-        }
-
-        protected JsonConverter<TValue> GetValueConverter(ref WriteStack state)
-        {
-            JsonConverter<TValue> converter = (JsonConverter<TValue>)state.Current.DeclaredJsonPropertyInfo.ConverterBase;
-            if (converter == null)
-            {
-                state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ThrowCollectionNotSupportedException();
-            }
-
-            return converter!;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected string GetKeyName(string key, ref WriteStack state, JsonSerializerOptions options)
-        {
-            if (options.DictionaryKeyPolicy != null && !state.Current.IgnoreDictionaryKeyPolicy)
-            {
-                key = options.DictionaryKeyPolicy.ConvertName(key);
-
-                if (key == null)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_SerializerDictionaryKeyNull(options.DictionaryKeyPolicy.GetType());
-                }
-            }
-
-            return key;
-        }
-
-        protected virtual void CreateCollection(ref ReadStack state) { }
-        protected virtual void ConvertCollection(ref ReadStack state) { }
     }
 }

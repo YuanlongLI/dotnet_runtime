@@ -6,13 +6,44 @@ namespace System.Text.Json.Serialization.Converters
 {
     internal abstract class JsonIEnumerableDefaultConverter<TCollection, TElement> : JsonArrayConverter<TCollection, TElement>
     {
-        internal override bool OnTryRead(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options, ref ReadStack state, out TCollection value)
+        protected abstract void Add(TElement value, ref ReadStack state);
+
+        protected virtual void CreateCollection(ref ReadStack state) { }
+        protected virtual void ConvertCollection(ref ReadStack state) { }
+
+        protected static JsonConverter<TElement> GetElementConverter(ref ReadStack state)
+        {
+            JsonConverter<TElement>? converter = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase as JsonConverter<TElement>;
+            if (converter == null)
+            {
+                state.Current.JsonClassInfo.ElementClassInfo.PolicyProperty.ThrowCollectionNotSupportedException();
+            }
+
+            return converter!;
+        }
+
+        protected static JsonConverter<TElement> GetElementConverter(ref WriteStack state)
+        {
+            JsonConverter<TElement>? converter = state.Current.DeclaredJsonPropertyInfo.ConverterBase as JsonConverter<TElement>;
+            if (converter == null)
+            {
+                state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ThrowCollectionNotSupportedException();
+            }
+
+            return converter!;
+        }
+
+        internal override bool OnTryRead(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options,
+            ref ReadStack state,
+            out TCollection value)
         {
             if (!state.SupportContinuation)
             {
                 // Fast path that avoids maintaining state variables.
 
-                // Read StartArray.
                 if (reader.TokenType != JsonTokenType.StartArray)
                 {
                     ThrowHelper.ThrowJsonException_DeserializeUnableToConvertValue(TypeToConvert);
@@ -39,7 +70,6 @@ namespace System.Text.Json.Serialization.Converters
                 }
                 else
                 {
-                    // Read all items.
                     while (true)
                     {
                         reader.Read();
@@ -56,7 +86,6 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                // Read StartArray.
                 if (!state.Current.ProcessedStartToken)
                 {
                     if (reader.TokenType != JsonTokenType.StartArray)
@@ -71,7 +100,6 @@ namespace System.Text.Json.Serialization.Converters
 
                 JsonConverter<TElement> elementConverter = GetElementConverter(ref state);
 
-                // Read all items.
                 while (true)
                 {
                     if (state.Current.ProcessedPropertyState < StackFramePropertyState.ReadValue)
@@ -150,32 +178,6 @@ namespace System.Text.Json.Serialization.Converters
             return success;
         }
 
-        protected abstract void Add(TElement value, ref ReadStack state);
-
-        protected static JsonConverter<TElement> GetElementConverter(ref ReadStack state)
-        {
-            JsonConverter<TElement>? converter = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase as JsonConverter<TElement>;
-            if (converter == null)
-            {
-                state.Current.JsonClassInfo.ElementClassInfo.PolicyProperty.ThrowCollectionNotSupportedException();
-            }
-
-            return converter!;
-        }
-
-        protected static JsonConverter<TElement> GetElementConverter(ref WriteStack state)
-        {
-            JsonConverter<TElement>? converter = state.Current.DeclaredJsonPropertyInfo.ConverterBase as JsonConverter<TElement>;
-            if (converter == null)
-            {
-                state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ThrowCollectionNotSupportedException();
-            }
-
-            return converter!;
-        }
-
-        protected virtual void CreateCollection(ref ReadStack state) { }
-        protected virtual void ConvertCollection(ref ReadStack state) { }
         protected abstract bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state);
     }
 }
