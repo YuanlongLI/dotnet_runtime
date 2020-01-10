@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class JsonDefaultArrayConverter<TCollection, TElement> : JsonIEnumerableDefaultConverter<TCollection, TElement> where TCollection: IEnumerable
+    internal sealed class JsonArrayDefaultConverter<TCollection, TElement> : JsonIEnumerableDefaultConverter<TCollection, TElement> where TCollection: IEnumerable
     {
         protected override void CreateCollection(ref ReadStack state)
         {

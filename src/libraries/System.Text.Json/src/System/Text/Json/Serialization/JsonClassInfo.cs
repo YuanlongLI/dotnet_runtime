@@ -124,7 +124,6 @@ namespace System.Text.Json
                 out converter,
                 options);
 
-            // Ignore properties on enumerable.
             switch (ClassType)
             {
                 case ClassType.Object:

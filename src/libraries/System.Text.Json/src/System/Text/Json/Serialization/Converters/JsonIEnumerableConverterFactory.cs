@@ -21,7 +21,7 @@ namespace System.Text.Json.Serialization.Converters
             return typeof(IEnumerable).IsAssignableFrom(typeToConvert);
         }
 
-        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonArrayConverter`2")]
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonArrayDefaultConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonDefaultArrayConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonIDictionaryOfStringTValueConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonDictionaryOfStringTValueConverter`2")]
@@ -46,7 +46,7 @@ namespace System.Text.Json.Serialization.Converters
                     return null;
                 }
 
-                converterType = typeof(JsonDefaultArrayConverter<,>);
+                converterType = typeof(JsonArrayDefaultConverter<,>);
                 elementType = typeToConvert.GetElementType();
             }
             // List<>
