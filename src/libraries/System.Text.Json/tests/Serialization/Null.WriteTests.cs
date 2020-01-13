@@ -124,7 +124,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Null(nestedObj.MyObjectDictionaryDictionary["key"]["key"]);
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void NullReferences()
         {
             var obj = new ObjectWithObjectProperties();

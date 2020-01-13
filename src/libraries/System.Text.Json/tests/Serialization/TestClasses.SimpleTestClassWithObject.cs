@@ -36,7 +36,6 @@ namespace System.Text.Json.Serialization.Tests
         public object MyStringIEnumerableT { get; set; }
         public object MyStringIListT { get; set; }
         public object MyStringICollectionT { get; set; }
-        /*
         public object MyStringIReadOnlyCollectionT { get; set; }
         public object MyStringIReadOnlyListT { get; set; }
         public object MyStringISetT { get; set; }
@@ -63,7 +62,6 @@ namespace System.Text.Json.Serialization.Tests
         public object MyStringImmutableStackT { get; set; }
         public object MyStringImmutablQueueT { get; set; }
         public object MyStringImmutableSortedSetT { get; set; }
-        */
 
         public static new readonly string s_json =
                 @"{" +
@@ -108,7 +106,6 @@ namespace System.Text.Json.Serialization.Tests
                 @"""MyStringIEnumerableT"" : [""Hello""]," +
                 @"""MyStringIListT"" : [""Hello""]," +
                 @"""MyStringICollectionT"" : [""Hello""]" +
-                /*
                 @"""MyStringIReadOnlyCollectionT"" : [""Hello""]," +
                 @"""MyStringIReadOnlyListT"" : [""Hello""]," +
                 @"""MyStringISetT"" : [""Hello""]," +
@@ -134,7 +131,6 @@ namespace System.Text.Json.Serialization.Tests
                 @"""MyStringImmutableStackT"" : [""Hello""]," +
                 @"""MyStringImmutablQueueT"" : [""Hello""]," +
                 @"""MyStringImmutableSortedSetT"" : [""Hello""]" +
-                */
                 @"}";
 
         public static new readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
@@ -170,7 +166,6 @@ namespace System.Text.Json.Serialization.Tests
             MyStringIEnumerableT = new string[] { "Hello" };
             MyStringIListT = new string[] { "Hello" };
             MyStringICollectionT = new string[] { "Hello" };
-            /*
             MyStringIReadOnlyCollectionT = new string[] { "Hello" };
             MyStringIReadOnlyListT = new string[] { "Hello" };
             MyStringIReadOnlyListT = new HashSet<string> { "Hello" };
@@ -203,7 +198,6 @@ namespace System.Text.Json.Serialization.Tests
             MyStringImmutableStackT = ImmutableStack.CreateRange(new List<string> { "Hello" });
             MyStringImmutablQueueT = ImmutableQueue.CreateRange(new List<string> { "Hello" });
             MyStringImmutableSortedSetT = ImmutableSortedSet.CreateRange(new List<string> { "Hello" });
-            */
         }
 
         public override void Verify()
@@ -241,7 +235,6 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal("Hello", ((IEnumerable<string>)MyStringIEnumerableT).First());
             Assert.Equal("Hello", ((IList<string>)MyStringIListT)[0]);
             Assert.Equal("Hello", ((ICollection<string>)MyStringICollectionT).First());
-            /*
             Assert.Equal("Hello", ((IReadOnlyCollection<string>)MyStringIReadOnlyCollectionT).First());
             Assert.Equal("Hello", ((IReadOnlyList<string>)MyStringIReadOnlyListT)[0]);
             Assert.Equal("Hello", ((ISet<string>)MyStringISetT).First());
@@ -290,7 +283,6 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal("Hello", ((ImmutableStack<string>)MyStringImmutableStackT).First());
             Assert.Equal("Hello", ((ImmutableQueue<string>)MyStringImmutablQueueT).First());
             Assert.Equal("Hello", ((ImmutableSortedSet<string>)MyStringImmutableSortedSetT).First());
-            */
         }
     }
 }

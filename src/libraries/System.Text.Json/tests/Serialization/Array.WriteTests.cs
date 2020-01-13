@@ -365,7 +365,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void WriteClassWithObjectIReadOnlyCollectionT()
         {
             string json;
@@ -388,7 +388,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void WriteClassWithObjectIReadOnlyListT()
         {
             string json;
@@ -411,7 +411,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void WriteClassWithObjectIEnumerableConstructibleTypes()
         {
             string json;
@@ -434,7 +434,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void WriteClassWithObjectImmutableTypes()
         {
             string json;

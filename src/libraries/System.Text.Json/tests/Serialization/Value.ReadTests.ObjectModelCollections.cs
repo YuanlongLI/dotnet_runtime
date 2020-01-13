@@ -28,7 +28,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.True(kc[0]);
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void Read_ObjectModelCollection_Throws()
         {
             // No default constructor.

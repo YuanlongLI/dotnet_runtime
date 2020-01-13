@@ -9,8 +9,8 @@ namespace System.Text.Json.Serialization.Converters
     internal abstract class JsonDictionaryDefaultConverter<TCollection, TValue> : JsonDictionaryConverter<TCollection>
     {
         protected abstract void Add(TValue value, JsonSerializerOptions options, ref ReadStack state);
-        protected virtual void ConvertCollection(ref ReadStack state) { }
         protected virtual void CreateCollection(ref ReadStack state) { }
+        protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }
         internal override Type ElementType => typeof(TValue);
 
         protected static JsonConverter<TValue> GetElementConverter(ref ReadStack state)
@@ -196,7 +196,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
             }
 
-            ConvertCollection(ref state);
+            ConvertCollection(ref state, options);
             value = (TCollection)state.Current.ReturnValue!;
             return true;
         }

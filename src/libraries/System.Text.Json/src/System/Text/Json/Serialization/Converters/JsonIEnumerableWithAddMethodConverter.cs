@@ -3,27 +3,32 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class JsonIEnumerableConverter<TCollection> : JsonIEnumerableDefaultConverter<TCollection, object>
+    internal sealed class JsonIEnumerableWithAddMethodConverter<TCollection> : JsonIEnumerableDefaultConverter<TCollection, object>
         where TCollection : IEnumerable
     {
         protected override void Add(object value, ref ReadStack state)
         {
-            ((List<object>)state.Current.ReturnValue!).Add(value);
+            Debug.Assert(state.Current.AddMethodDelegate != null);
+            ((Action<TCollection, object>)state.Current.AddMethodDelegate)((TCollection)state.Current.ReturnValue!, value);
         }
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
-            if (!TypeToConvert.IsAssignableFrom(RuntimeType))
+            JsonClassInfo classInfo = state.Current.JsonClassInfo;
+
+            if (classInfo.CreateObject == null)
             {
-                ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
+                ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(classInfo.Type);
             }
 
-            state.Current.ReturnValue = new List<object>();
+            state.Current.ReturnValue = classInfo.CreateObject()!;
+            state.Current.AddMethodDelegate = GetOrAddEnumerableAddMethodDelegate(classInfo.Type, options);
         }
 
         protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
@@ -57,6 +62,19 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal override Type RuntimeType => typeof(List<object>);
+        internal override Type RuntimeType => TypeToConvert;
+
+        private readonly ConcurrentDictionary<Type, Action<TCollection, object>> _delegates = new ConcurrentDictionary<Type, Action<TCollection, object>>();
+
+        internal Action<TCollection, object> GetOrAddEnumerableAddMethodDelegate(Type type, JsonSerializerOptions options)
+        {
+            if (!_delegates.TryGetValue(type, out Action<TCollection, object>? result))
+            {
+                // We verified this exists when we created the converter in the enumerable converter factory.
+                result = options.MemberAccessorStrategy.CreateAddMethodDelegate<TCollection>();
+            }
+
+            return result;
+        }
     }
 }

@@ -67,7 +67,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Contains(@"""Dictionary"":{""key"":2}", serialized);
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void CustomUnsupportedDictionaryConverter()
         {
             string json = @"{""DictionaryWrapper"": {""1"": 1}}";
@@ -95,7 +95,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(@"{""DictionaryWrapper"":{}}", JsonSerializer.Serialize(wrapper, options));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void CustomUnsupportedIEnumerableConverter()
         {
             string json = @"{""IEnumerableWrapper"": [""1"", ""2"", ""3""]}";

@@ -350,7 +350,7 @@ namespace System.Text.Json.Serialization.Tests
             TestClassWithGenericICollection obj = JsonSerializer.Deserialize<TestClassWithGenericICollection>(TestClassWithGenericICollection.s_data);
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadClassWithObjectISetT()
         {
             TestClassWithObjectISetT obj = JsonSerializer.Deserialize<TestClassWithObjectISetT>(TestClassWithObjectISetT.s_data);
@@ -378,35 +378,36 @@ namespace System.Text.Json.Serialization.Tests
             obj.Verify();
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadClassWithGenericIReadOnlyCollectionT()
         {
             TestClassWithGenericIReadOnlyCollectionT obj = JsonSerializer.Deserialize<TestClassWithGenericIReadOnlyCollectionT>(TestClassWithGenericIReadOnlyCollectionT.s_data);
             obj.Verify();
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadClassWithGenericIReadOnlyListT()
         {
             TestClassWithGenericIReadOnlyListT obj = JsonSerializer.Deserialize<TestClassWithGenericIReadOnlyListT>(TestClassWithGenericIReadOnlyListT.s_data);
             obj.Verify();
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadClassWithGenericISetT()
         {
             TestClassWithGenericISetT obj = JsonSerializer.Deserialize<TestClassWithGenericISetT>(TestClassWithGenericISetT.s_data);
             obj.Verify();
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+
+        [Fact]
         public static void ReadClassWithObjectIEnumerableConstructibleTypes()
         {
             TestClassWithObjectIEnumerableConstructibleTypes obj = JsonSerializer.Deserialize<TestClassWithObjectIEnumerableConstructibleTypes>(TestClassWithObjectIEnumerableConstructibleTypes.s_data);
             obj.Verify();
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadClassWithObjectImmutableTypes()
         {
             TestClassWithObjectImmutableTypes obj = JsonSerializer.Deserialize<TestClassWithObjectImmutableTypes>(TestClassWithObjectImmutableTypes.s_data);
@@ -535,7 +536,7 @@ namespace System.Text.Json.Serialization.Tests
             internal object GetRawImmutableList => _immutableList;
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ClassWithNonNullEnumerableGettersIsParsed()
         {
             static void TestRoundTrip(ClassWithNonNullEnumerableGetters obj)
@@ -628,6 +629,46 @@ namespace System.Text.Json.Serialization.Tests
 
             obj = JsonSerializer.Deserialize<ClassWithNonNullEnumerableGetters>(inputJsonWithNullCollections);
             TestRoundTrip(obj);
+        }
+
+        [Fact]
+        public static void DoNotDependOnPropertyGetterWhenDeserializingCollections()
+        {
+            Dealer dealer = new Dealer { NetworkCodeList = new List<string> { "Network1", "Network2" } };
+
+            string serialized = JsonSerializer.Serialize(dealer);
+            Assert.Equal(@"{""NetworkCodeList"":[""Network1"",""Network2""]}", serialized);
+
+            dealer = JsonSerializer.Deserialize<Dealer>(serialized);
+
+            List<string> expected = new List<string> { "Network1", "Network2" };
+            int i = 0;
+
+            foreach (string str in dealer.NetworkCodeList)
+            {
+                Assert.Equal(expected[i], str);
+                i++;
+            }
+
+            Assert.Equal("Network1,Network2", dealer.Networks);
+        }
+
+        class Dealer
+        {
+            private string _Networks;
+
+            [JsonIgnore]
+            public string Networks
+            {
+                get => _Networks;
+                set => _Networks = value ?? string.Empty;
+            }
+
+            public IEnumerable<string> NetworkCodeList
+            {
+                get => !string.IsNullOrEmpty(Networks) ? Networks?.Split(',') : new string[0];
+                set => Networks = (value != null) ? string.Join(",", value) : string.Empty;
+            }
         }
     }
 }

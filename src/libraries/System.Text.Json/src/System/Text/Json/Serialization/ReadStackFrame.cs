@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace System.Text.Json
 {
@@ -42,6 +43,9 @@ namespace System.Text.Json
         // For performance, we order the properties by the first deserialize and PropertyIndex helps find the right slot quicker.
         public int PropertyIndex;
         public List<PropertyRef>? PropertyRefCache;
+
+        // State to populating enumerables with an add delegate, where possible.
+        public object? AddMethodDelegate;
 
         public void InitializeReEntry(Type type, JsonSerializerOptions options, string? propertyName)
         {
@@ -103,15 +107,6 @@ namespace System.Text.Json
         public void EndProperty()
         {
             ProcessedPropertyState = StackFramePropertyState.None;
-
-            // No need to clear these since they are overwritten each time:
-            //JsonPropertyInfo = null;
-            //UseExtensionProperty = false;
-            //OriginalPropertyDepth = 0;
-            //OriginalPropertyBytesConsumed = 0;
-            //OriginalPropertyTokenType = JsonTokenType.None;
-
-            // Don't clear JsonPropertyName or JsonPropertyNameAsString since they are used for JsonPath in exception cases.
         }
 
         public void EndElement()

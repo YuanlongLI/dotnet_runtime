@@ -353,7 +353,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(0, result2.Count());
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericIReadOnlyCollectionOfGenericIReadOnlyCollection()
         {
             IReadOnlyCollection<IReadOnlyCollection<int>> result = JsonSerializer.Deserialize<IReadOnlyCollection<IReadOnlyCollection<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -371,7 +371,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<GenericIReadOnlyCollectionWrapper<StringIReadOnlyCollectionWrapper>>(@"[[""1"",""2""],[""3"",""4""]]"));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericIReadOnlyCollectionOfArray()
         {
             IReadOnlyCollection<int[]> result = JsonSerializer.Deserialize<IReadOnlyCollection<int[]>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -388,7 +388,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<GenericIReadOnlyCollectionWrapper<int[]>>(@"[[1,2],[3,4]]"));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfIReadOnlyCollectionT()
         {
             IReadOnlyCollection<int>[] result = JsonSerializer.Deserialize<IReadOnlyCollection<int>[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -406,7 +406,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<StringIReadOnlyCollectionWrapper[]>(@"[[""1"",""2""],[""3"",""4""]]"));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericSimpleIReadOnlyCollection()
         {
             IReadOnlyCollection<int> result = JsonSerializer.Deserialize<IReadOnlyCollection<int>>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -424,7 +424,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<StringIReadOnlyCollectionWrapper>(@"[""1"",""2""]"));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericIReadOnlyListOfGenericIReadOnlyList()
         {
             IReadOnlyList<IReadOnlyList<int>> result = JsonSerializer.Deserialize<IReadOnlyList<IReadOnlyList<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -441,7 +441,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<GenericIReadOnlyListWrapper<StringIReadOnlyListWrapper>>(@"[[""1"",""2""],[""3"",""4""]]"));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericIReadOnlyListOfArray()
         {
             IReadOnlyList<int[]> result = JsonSerializer.Deserialize<IReadOnlyList<int[]>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -459,7 +459,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<GenericIReadOnlyListWrapper<string[]>>(@"[[""1"",""2""],[""3"",""4""]]"));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfGenericIReadOnlyList()
         {
             IReadOnlyList<int>[] result = JsonSerializer.Deserialize<IReadOnlyList<int>[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -477,7 +477,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<StringIReadOnlyListWrapper[]>(@"[[""1"",""2""],[""3"",""4""]]"));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleGenericIReadOnlyList()
         {
             IReadOnlyList<int> result = JsonSerializer.Deserialize<IReadOnlyList<int>>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -495,7 +495,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<StringIReadOnlyListWrapper>(@"[""1"",""2""]"));
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericISetOfGenericISet()
         {
             ISet<ISet<int>> result = JsonSerializer.Deserialize<ISet<ISet<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -525,7 +525,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadISetTOfHashSetT()
         {
             ISet<HashSet<int>> result = JsonSerializer.Deserialize<ISet<HashSet<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -542,7 +542,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadHashSetTOfISetT()
         {
             HashSet<ISet<int>> result = JsonSerializer.Deserialize<HashSet<ISet<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -559,7 +559,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadISetTOfArray()
         {
             ISet<int[]> result = JsonSerializer.Deserialize<ISet<int[]>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -576,7 +576,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfISetT()
         {
             ISet<int>[] result = JsonSerializer.Deserialize<ISet<int>[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -585,7 +585,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(new HashSet<int> { 3, 4 }, result.Last());
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleISetT()
         {
             ISet<int> result = JsonSerializer.Deserialize<ISet<int>>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -596,7 +596,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(0, result.Count());
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void StackTOfStackT()
         {
             Stack<Stack<int>> result = JsonSerializer.Deserialize<Stack<Stack<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -622,7 +622,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericStackOfArray()
         {
             Stack<int[]> result = JsonSerializer.Deserialize<Stack<int[]>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -652,7 +652,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfGenericStack()
         {
             Stack<int>[] result = JsonSerializer.Deserialize<Stack<int>[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -682,7 +682,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleGenericStack()
         {
             Stack<int> result = JsonSerializer.Deserialize<Stack<int>>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -708,7 +708,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(0, result2.Count());
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadQueueTOfQueueT()
         {
             Queue<Queue<int>> result = JsonSerializer.Deserialize<Queue<Queue<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -734,7 +734,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadQueueTOfArray()
         {
             Queue<int[]> result = JsonSerializer.Deserialize<Queue<int[]>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -749,7 +749,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfIQueueT()
         {
             Queue<int>[] result = JsonSerializer.Deserialize<Queue<int>[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -764,7 +764,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleQueueT()
         {
             Queue<int> result = JsonSerializer.Deserialize<Queue<int>>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -779,7 +779,7 @@ namespace System.Text.Json.Serialization.Tests
 
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadHashSetTOfHashSetT()
         {
             HashSet<HashSet<int>> result = JsonSerializer.Deserialize<HashSet<HashSet<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -805,7 +805,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadHashSetTOfArray()
         {
             HashSet<int[]> result = JsonSerializer.Deserialize<HashSet<int[]>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -820,7 +820,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfIHashSetT()
         {
             HashSet<int>[] result = JsonSerializer.Deserialize<HashSet<int>[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -835,7 +835,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleHashSetT()
         {
             HashSet<int> result = JsonSerializer.Deserialize<HashSet<int>>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -850,7 +850,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(0, result.Count());
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericLinkedListOfGenericLinkedList()
         {
             LinkedList<LinkedList<int>> result = JsonSerializer.Deserialize<LinkedList<LinkedList<int>>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -876,7 +876,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadLinkedListTOfArray()
         {
             LinkedList<int[]> result = JsonSerializer.Deserialize<LinkedList<int[]>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -891,7 +891,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfILinkedListT()
         {
             LinkedList<int>[] result = JsonSerializer.Deserialize<LinkedList<int>[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -906,7 +906,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleLinkedListT()
         {
             LinkedList<int> result = JsonSerializer.Deserialize<LinkedList<int>>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -921,7 +921,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(0, result.Count());
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfSortedSetT()
         {
             SortedSet<int>[] result = JsonSerializer.Deserialize<SortedSet<int>[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -947,7 +947,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleSortedSetT()
         {
             SortedSet<int> result = JsonSerializer.Deserialize<SortedSet<int>>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -1125,14 +1125,15 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Null(obj.KvpWClassKvpVal.Value.Value);
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
+        //[Fact]
         public static void ReadSimpleTestClass_GenericCollectionWrappers()
         {
             SimpleTestClassWithGenericCollectionWrappers obj = JsonSerializer.Deserialize<SimpleTestClassWithGenericCollectionWrappers>(SimpleTestClassWithGenericCollectionWrappers.s_json);
             obj.Verify();
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleTestClass_GenericWrappers_NoAddMethod_Throws()
         {
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<SimpleTestClassWithStringIEnumerableWrapper>(SimpleTestClassWithStringIEnumerableWrapper.s_json));
@@ -1142,12 +1143,6 @@ namespace System.Text.Json.Serialization.Tests
         }
 
         [Fact]
-        public static void ReadPrimitiveStringCollection_Throws()
-        {
-            Assert.Throws<InvalidCastException>(() => JsonSerializer.Deserialize<StringCollection>(@"[""1"", ""2""]"));
-        }
-
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
         public static void ReadReadOnlyCollections_Throws()
         {
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<ReadOnlyWrapperForIList>(@"[""1"", ""2""]"));

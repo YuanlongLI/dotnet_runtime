@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace System.Text.Json.Serialization.Converters
 {
     internal sealed class JsonDictionaryOfStringTValueConverter<TCollection, TValue> : JsonDictionaryDefaultConverter<TCollection, TValue>
-        where TCollection : Dictionary<string, TValue>, new()
+        where TCollection : Dictionary<string, TValue>
     {
         protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
         {
@@ -17,7 +17,12 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void CreateCollection(ref ReadStack state)
         {
-            state.Current.ReturnValue = new TCollection();
+            if (state.Current.JsonClassInfo.CreateObject == null)
+            {
+                ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(state.Current.JsonClassInfo.Type);
+            }
+
+            state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();
         }
 
         protected internal override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)

@@ -3,49 +3,27 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class JsonIDictionaryOfStringTValueConverter<TCollection, TValue> : JsonDictionaryDefaultConverter<TCollection, TValue>
-        where TCollection : IDictionary<string, TValue>
+    internal sealed class JsonImmutableDictionaryOfStringTValueConverter<TCollection, TValue> : JsonDictionaryDefaultConverter<TCollection, TValue>
+        where TCollection : IReadOnlyDictionary<string, TValue>
     {
         protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
         {
             string key = state.Current.KeyName!;
-            ((TCollection)state.Current.ReturnValue!)[key] = value;
+            ((Dictionary<string, TValue>)state.Current.ReturnValue!)[key] = value;
         }
 
         protected override void CreateCollection(ref ReadStack state)
         {
-            JsonClassInfo classInfo = state.Current.JsonClassInfo;
+            state.Current.ReturnValue = new Dictionary<string, TValue>();
+        }
 
-            if ((TypeToConvert.IsInterface || TypeToConvert.IsAbstract))
-            {
-                if (!TypeToConvert.IsAssignableFrom(RuntimeType))
-                {
-                    ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
-                }
-
-                state.Current.ReturnValue = new Dictionary<string, TValue>();
-            }
-            else
-            {
-                if (classInfo.CreateObject == null)
-                {
-                    ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
-                }
-                else
-                {
-                    TCollection returnValue = (TCollection)classInfo.CreateObject!()!;
-
-                    if (returnValue.IsReadOnly)
-                    {
-                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(TypeToConvert);
-                    }
-
-                    state.Current.ReturnValue = returnValue;
-                }
-            }
+        protected override void ConvertCollection(ref ReadStack state, JsonSerializerOptions options)
+        {
+            state.Current.ReturnValue = GetCreatorDelegate(options)((Dictionary<string, TValue>)state.Current.ReturnValue!);
         }
 
         protected internal override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
@@ -83,17 +61,18 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal override Type RuntimeType
-        {
-            get
-            {
-                if (TypeToConvert.IsAbstract || TypeToConvert.IsInterface)
-                {
-                    return typeof(Dictionary<string, TValue>);
-                }
+        internal override Type RuntimeType => TypeToConvert;
 
-                return TypeToConvert;
+        private Func<IEnumerable<KeyValuePair<string, TValue>>, TCollection>? _creatorDelegate;
+
+        private Func<IEnumerable<KeyValuePair<string, TValue>>, TCollection> GetCreatorDelegate(JsonSerializerOptions options)
+        {
+            if (_creatorDelegate == null)
+            {
+                _creatorDelegate = options.MemberAccessorStrategy.CreateImmutableDictionaryCreateRangeDelegate<TValue, TCollection>();
             }
+
+            return _creatorDelegate;
         }
     }
 }

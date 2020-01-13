@@ -11,7 +11,6 @@ namespace System.Text.Json.Serialization.Tests
 {
     public static partial class ValueTests
     {
-        /*
         [Fact]
         public static void WriteImmutableArrayOfImmutableArray()
         {
@@ -509,6 +508,5 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(SimpleTestClassWithImmutableSetWrapper.s_json.StripWhitespace(), JsonSerializer.Serialize(obj5));
             Assert.Equal(SimpleTestClassWithImmutableSetWrapper.s_json.StripWhitespace(), JsonSerializer.Serialize<object>(obj5));
         }
-        */
     }
 }

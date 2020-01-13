@@ -8,7 +8,7 @@ namespace System.Text.Json.Serialization.Converters
     {
         private Type _elementType = typeof(TElement);
 
-        internal override ClassType ClassType =>ClassType.Enumerable;
+        internal override ClassType ClassType => ClassType.Enumerable;
         internal override Type ElementType => _elementType;
     }
 }

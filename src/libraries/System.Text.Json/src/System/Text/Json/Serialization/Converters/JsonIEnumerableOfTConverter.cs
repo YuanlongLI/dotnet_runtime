@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -14,20 +16,15 @@ namespace System.Text.Json.Serialization.Converters
             ((List<TElement>)state.Current.ReturnValue!).Add(value);
         }
 
-        protected override void CreateCollection(ref ReadStack state)
+        protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
-            Type collectionType = state.Current.JsonClassInfo.Type;
-            if (collectionType != RuntimeType && collectionType != TypeToConvert)
+            if (!TypeToConvert.IsAssignableFrom(RuntimeType))
             {
-                // A collection was specified that just implements IEnumerable<T>; there's not a way to populate that.
-                ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(collectionType);
+                ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
             }
 
             state.Current.ReturnValue = new List<TElement>();
         }
-
-        // Consider overriding ConvertCollection to convert the list to an array since a List is mutable.
-        // However, converting from the temporary list to an array will be slower.
 
         protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
         {

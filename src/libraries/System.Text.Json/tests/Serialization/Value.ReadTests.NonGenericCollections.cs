@@ -236,7 +236,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(0, count);
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericStackOfStack()
         {
             Stack<Stack> result = JsonSerializer.Deserialize<Stack<Stack>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -251,7 +251,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadStackOfArray()
         {
             Stack result = JsonSerializer.Deserialize<Stack>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -267,7 +267,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfStack()
         {
             Stack[] result = JsonSerializer.Deserialize<Stack[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -283,7 +283,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadPrimitiveStack()
         {
             Stack result = JsonSerializer.Deserialize<Stack>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -313,7 +313,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadGenericQueueOfQueue()
         {
             Queue<Queue> result = JsonSerializer.Deserialize<Queue<Queue>>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -328,7 +328,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadQueueOfArray()
         {
             Queue result = JsonSerializer.Deserialize<Queue>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -343,7 +343,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadArrayOfQueue()
         {
             Queue[] result = JsonSerializer.Deserialize<Queue[]>(Encoding.UTF8.GetBytes(@"[[1,2],[3,4]]"));
@@ -358,7 +358,7 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadPrimitiveQueue()
         {
             Queue result = JsonSerializer.Deserialize<Queue>(Encoding.UTF8.GetBytes(@"[1,2]"));
@@ -451,14 +451,14 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(0, count);
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleTestClass_NonGenericCollectionWrappers()
         {
             SimpleTestClassWithNonGenericCollectionWrappers obj = JsonSerializer.Deserialize<SimpleTestClassWithNonGenericCollectionWrappers>(SimpleTestClassWithNonGenericCollectionWrappers.s_json);
             obj.Verify();
         }
 
-        [Fact(Skip = "todo: add appropriate collection support and re-enable this test")]
+        [Fact]
         public static void ReadSimpleTestClass_NonGenericWrappers_NoAddMethod_Throws()
         {
             Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<SimpleTestClassWithIEnumerableWrapper>(SimpleTestClassWithIEnumerableWrapper.s_json));

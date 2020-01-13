@@ -8,8 +8,8 @@ namespace System.Text.Json.Serialization.Converters
     {
         protected abstract void Add(TElement value, ref ReadStack state);
 
-        protected virtual void CreateCollection(ref ReadStack state) { }
-        protected virtual void ConvertCollection(ref ReadStack state) { }
+        protected virtual void CreateCollection(ref ReadStack state, JsonSerializerOptions options) { }
+        protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }
 
         protected static JsonConverter<TElement> GetElementConverter(ref ReadStack state)
         {
@@ -49,7 +49,7 @@ namespace System.Text.Json.Serialization.Converters
                     ThrowHelper.ThrowJsonException_DeserializeUnableToConvertValue(TypeToConvert);
                 }
 
-                CreateCollection(ref state);
+                CreateCollection(ref state, options);
 
                 JsonConverter<TElement> elementConverter = GetElementConverter(ref state);
                 if (elementConverter.CanUseDirectReadOrWrite)
@@ -94,7 +94,7 @@ namespace System.Text.Json.Serialization.Converters
                     }
 
                     state.Current.ProcessedStartToken = true;
-                    CreateCollection(ref state);
+                    CreateCollection(ref state, options);
                     state.Current.JsonPropertyInfo = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!;
                 }
 
@@ -141,7 +141,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
             }
 
-            ConvertCollection(ref state);
+            ConvertCollection(ref state, options);
             value = (TCollection)state.Current.ReturnValue!;
             return true;
         }

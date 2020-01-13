@@ -21,7 +21,7 @@ namespace System.Text.Json.Serialization.Converters
 
                 if (state.Current.JsonClassInfo.CreateObject == null)
                 {
-                    ThrowHelper.ThrowNotSupportedException_DeserializeCreateObjectDelegateIsNull(state.Current.JsonClassInfo.Type);
+                    ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(state.Current.JsonClassInfo.Type);
                 }
 
                 obj = state.Current.JsonClassInfo.CreateObject!()!;
@@ -85,7 +85,7 @@ namespace System.Text.Json.Serialization.Converters
                 {
                     if (state.Current.JsonClassInfo.CreateObject == null)
                     {
-                        ThrowHelper.ThrowNotSupportedException_DeserializeCreateObjectDelegateIsNull(state.Current.JsonClassInfo.Type);
+                        ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(state.Current.JsonClassInfo.Type);
                     }
 
                     state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();
