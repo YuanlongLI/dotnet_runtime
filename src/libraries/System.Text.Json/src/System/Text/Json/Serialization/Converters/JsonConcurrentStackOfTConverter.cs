@@ -2,31 +2,27 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    /// <summary>
-    /// Converter for <cref>System.Collections.Generic.IEnumerable{TElement}</cref>.
-    /// </summary>
-    internal sealed class JsonIEnumerableOfTConverter<TCollection, TElement> : JsonIEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection : IEnumerable<TElement>
+    internal sealed class JsonConcurrentStackOfTConverter<TCollection, TElement> : JsonIEnumerableDefaultConverter<TCollection, TElement>
+        where TCollection : ConcurrentStack<TElement>
     {
         protected override void Add(TElement value, ref ReadStack state)
         {
-            ((List<TElement>)state.Current.ReturnValue!).Add(value);
+            ((TCollection)state.Current.ReturnValue!).Push(value);
         }
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
-            if (!TypeToConvert.IsAssignableFrom(RuntimeType))
+            if (state.Current.JsonClassInfo.CreateObject == null)
             {
-                ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
+                ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(state.Current.JsonClassInfo.Type);
             }
 
-            state.Current.ReturnValue = new List<TElement>();
+            state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();
         }
 
         protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
@@ -67,6 +63,6 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal override Type RuntimeType => typeof(List<TElement>);
+        internal override Type RuntimeType => TypeToConvert;
     }
 }

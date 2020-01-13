@@ -4,6 +4,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -20,15 +21,11 @@ namespace System.Text.Json.Serialization.Converters
             ((List<object>)state.Current.ReturnValue!).Add(value);
         }
 
-        protected override void CreateCollection(ref ReadStack state)
+        protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
-            Type collectionType = state.Current.JsonClassInfo.Type;
-
-            // Perform quick check for IEnumerable and then slower check for compatibility with List<object>.
-            if (collectionType != typeof(IEnumerable) && !collectionType.IsAssignableFrom(RuntimeType))
+            if (!TypeToConvert.IsAssignableFrom(RuntimeType))
             {
-                // A collection was specified that just implements IEnumerable; there's not a way to populate that.
-                ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(collectionType);
+                ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
             }
 
             state.Current.ReturnValue = new List<object>();

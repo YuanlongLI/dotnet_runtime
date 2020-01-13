@@ -19,7 +19,7 @@ namespace System.Text.Json.Serialization.Converters
         /// When overridden, converts the temporary collection held in state.ReturnValue to the final collection.
         /// This is used with immutable collections.
         /// </summary>
-        protected virtual void ConvertCollection(ref ReadStack state) { }
+        protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }
 
         /// <summary>
         /// When overridden, create the collection. It may be a temporary collection or the final collection.
@@ -237,7 +237,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
             }
 
-            ConvertCollection(ref state);
+            ConvertCollection(ref state, options);
             value = (TCollection)state.Current.ReturnValue!;
             return true;
         }

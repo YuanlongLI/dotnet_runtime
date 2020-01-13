@@ -17,17 +17,36 @@ namespace System.Text.Json.Serialization.Converters
             ((TCollection)state.Current.ReturnValue!).Add(value);
         }
 
-        protected override void CreateCollection(ref ReadStack state)
+        protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
             JsonClassInfo classInfo = state.Current.JsonClassInfo;
-            Type type = classInfo.Type;
-            if (type.IsAbstract || type.IsInterface)
+
+            if ((TypeToConvert.IsInterface || TypeToConvert.IsAbstract))
             {
+                if (!TypeToConvert.IsAssignableFrom(RuntimeType))
+                {
+                    ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
+                }
+
                 state.Current.ReturnValue = new List<TElement>();
             }
             else
             {
-                state.Current.ReturnValue = classInfo.CreateObject!();
+                if (classInfo.CreateObject == null)
+                {
+                    ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
+                }
+                else
+                {
+                    TCollection returnValue = (TCollection)classInfo.CreateObject!()!;
+
+                    if (returnValue.IsReadOnly)
+                    {
+                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(TypeToConvert);
+                    }
+
+                    state.Current.ReturnValue = returnValue;
+                }
             }
         }
 

@@ -3,15 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
+using System.Collections.Concurrent;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    /// <summary>
-    /// Converter for <cref>System.Collections.Generic.IEnumerable{TElement}</cref>.
-    /// </summary>
-    internal sealed class JsonIEnumerableOfTConverter<TCollection, TElement> : JsonIEnumerableDefaultConverter<TCollection, TElement>
+    internal sealed class JsonImmutableEnumerableOfTConverter<TCollection, TElement> : JsonIEnumerableDefaultConverter<TCollection, TElement>
         where TCollection : IEnumerable<TElement>
     {
         protected override void Add(TElement value, ref ReadStack state)
@@ -21,12 +17,12 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
-            if (!TypeToConvert.IsAssignableFrom(RuntimeType))
-            {
-                ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
-            }
-
             state.Current.ReturnValue = new List<TElement>();
+        }
+
+        protected override void ConvertCollection(ref ReadStack state, JsonSerializerOptions options)
+        {
+            state.Current.ReturnValue = GetCreatorDelegate(options)((List<TElement>)state.Current.ReturnValue!);
         }
 
         protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
@@ -48,12 +44,6 @@ namespace System.Text.Json.Serialization.Converters
             JsonConverter<TElement> converter = GetElementConverter(ref state);
             do
             {
-                if (ShouldFlush(writer, ref state))
-                {
-                    state.Current.CollectionEnumerator = enumerator;
-                    return false;
-                }
-
                 TElement element = enumerator.Current;
                 if (!converter.TryWrite(writer, element, options, ref state))
                 {
@@ -67,6 +57,18 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal override Type RuntimeType => typeof(List<TElement>);
+        internal override Type RuntimeType => TypeToConvert;
+
+        private Func<IEnumerable<TElement>, TCollection>? _creatorDelegate;
+
+        private Func<IEnumerable<TElement>, TCollection> GetCreatorDelegate(JsonSerializerOptions options)
+        {
+            if (_creatorDelegate == null)
+            {
+                _creatorDelegate = options.MemberAccessorStrategy.CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>();
+            }
+
+            return _creatorDelegate;
+        }
     }
 }

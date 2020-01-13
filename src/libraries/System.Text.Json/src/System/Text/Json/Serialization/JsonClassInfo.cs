@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -9,6 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Converters;
 
 namespace System.Text.Json
 {
@@ -36,6 +38,9 @@ namespace System.Text.Json
 
         public delegate object? ConstructorDelegate();
         public ConstructorDelegate? CreateObject { get; private set; }
+
+        public delegate TCollection ConstructorDelegate<TCollection>(ICollection elements);
+        public delegate TCollection ConstructorDelegate<TCollection, TElement>(IEnumerable<TElement> elements);
 
         public ClassType ClassType { get; private set; }
 
@@ -518,9 +523,6 @@ namespace System.Text.Json
         // - class type,
         // - runtime type,
         // - element type (if the type is a collection),
-        // - the underlying type (if the type is nullable type e.g. int?),
-        // - the "add" method (if the type is a non-dictionary collection which doesn't implement IList
-        //   e.g. typeof(Stack<int>), where we retrieve the void Push(string) method), and
         // - the converter (either native or custom), if one exists.
         public static ClassType GetClassType(
             Type type,

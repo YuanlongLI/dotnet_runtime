@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace System.Text.Json
 {
@@ -44,6 +45,9 @@ namespace System.Text.Json
         public List<PropertyRef>? PropertyRefCache;
 
         public bool UseExtensionProperty;
+
+        // Add method delegate for Non-generic Stack and Queue; and types that derive from them.
+        public object? AddMethodDelegate;
 
         public void EndProperty()
         {

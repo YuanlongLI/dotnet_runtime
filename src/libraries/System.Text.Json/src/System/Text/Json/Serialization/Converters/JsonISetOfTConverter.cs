@@ -7,16 +7,12 @@ using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    /// <summary>
-    /// Converter for <cref>System.Collections.Generic.ICollection{TElement}</cref>.
-    /// </summary>
-    internal sealed class JsonICollectionOfTConverter<TCollection, TElement>
-        : JsonIEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection : ICollection<TElement>
+    internal sealed class JsonISetOfTConverter<TCollection, TElement> : JsonIEnumerableDefaultConverter<TCollection, TElement>
+        where TCollection : ISet<TElement>
     {
         protected override void Add(TElement value, ref ReadStack state)
         {
-            ((ICollection<TElement>)state.Current.ReturnValue!).Add(value);
+            ((TCollection)state.Current.ReturnValue!).Add(value);
         }
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
@@ -30,7 +26,7 @@ namespace System.Text.Json.Serialization.Converters
                     ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
                 }
 
-                state.Current.ReturnValue = new List<TElement>();
+                state.Current.ReturnValue = new HashSet<TElement>();
             }
             else
             {
@@ -52,11 +48,7 @@ namespace System.Text.Json.Serialization.Converters
             }
         }
 
-        protected override bool OnWriteResume(
-            Utf8JsonWriter writer,
-            TCollection value,
-            JsonSerializerOptions options,
-            ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
         {
             IEnumerator<TElement> enumerator;
             if (state.Current.CollectionEnumerator == null)
@@ -94,7 +86,7 @@ namespace System.Text.Json.Serialization.Converters
             {
                 if (TypeToConvert.IsAbstract || TypeToConvert.IsInterface)
                 {
-                    return typeof(List<TElement>);
+                    return typeof(HashSet<TElement>);
                 }
 
                 return TypeToConvert;

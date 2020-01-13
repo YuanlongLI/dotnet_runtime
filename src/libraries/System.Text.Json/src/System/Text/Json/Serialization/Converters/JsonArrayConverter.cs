@@ -21,12 +21,12 @@ namespace System.Text.Json.Serialization.Converters
             ((List<TElement>)state.Current.ReturnValue!).Add(value);
         }
 
-        protected override void CreateCollection(ref ReadStack state)
+        protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
             state.Current.ReturnValue = new List<TElement>();
         }
 
-        protected override void ConvertCollection(ref ReadStack state)
+        protected override void ConvertCollection(ref ReadStack state, JsonSerializerOptions options)
         {
             List<TElement> list = (List<TElement>)state.Current.ReturnValue!;
             state.Current.ReturnValue = list.ToArray();

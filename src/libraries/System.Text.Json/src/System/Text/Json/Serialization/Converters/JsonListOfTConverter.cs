@@ -9,16 +9,21 @@ namespace System.Text.Json.Serialization.Converters
     /// Converter for <cref>System.Collections.Generic.List{TElement}</cref>.
     internal sealed class JsonListOfTConverter<TCollection, TElement>
         : JsonIEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection: List<TElement>, new()
+        where TCollection: List<TElement>
     {
         protected override void Add(TElement value, ref ReadStack state)
         {
             ((TCollection)state.Current.ReturnValue!).Add(value);
         }
 
-        protected override void CreateCollection(ref ReadStack state)
+        protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
-            state.Current.ReturnValue = new TCollection();
+            if (state.Current.JsonClassInfo.CreateObject == null)
+            {
+                ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(state.Current.JsonClassInfo.Type);
+            }
+
+            state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();
         }
 
         protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
