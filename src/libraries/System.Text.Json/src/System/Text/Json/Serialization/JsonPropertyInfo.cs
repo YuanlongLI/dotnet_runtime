@@ -187,7 +187,7 @@ namespace System.Text.Json
             if (dictionaryObject != null && reader.TokenType == JsonTokenType.Null)
             {
                 // A null JSON value is treated as a null object reference.
-                dictionaryObject[state.Current.KeyName!] = null;
+                dictionaryObject[state.Current.JsonPropertyNameAsString!] = null;
             }
             else
             {
@@ -200,12 +200,12 @@ namespace System.Text.Json
 
                 if (dictionaryObject != null)
                 {
-                    dictionaryObject[state.Current.KeyName!] = jsonElement;
+                    dictionaryObject[state.Current.JsonPropertyNameAsString!] = jsonElement;
                 }
                 else
                 {
                     IDictionary<string, JsonElement> dictionaryJsonElement = (IDictionary<string, JsonElement>)propValue;
-                    dictionaryJsonElement[state.Current.KeyName!] = jsonElement;
+                    dictionaryJsonElement[state.Current.JsonPropertyNameAsString!] = jsonElement;
                 }
             }
 

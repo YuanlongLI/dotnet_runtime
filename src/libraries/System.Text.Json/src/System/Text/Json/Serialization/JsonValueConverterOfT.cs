@@ -4,8 +4,8 @@
 
 namespace System.Text.Json.Serialization
 {
-    // Used for value converters that need to re-enter the serializer since it will
-    // support JsonPath and other features that require per-serialization state.
+    // Used for value converters that need to re-enter the serializer since it will support JsonPath
+    // and reference handling.
     internal abstract class JsonValueConverter<T> : JsonConverter<T>
     {
         internal override sealed ClassType ClassType => ClassType.NewValue;

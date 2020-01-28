@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -12,11 +11,11 @@ namespace System.Text.Json.Serialization.Converters
     {
         protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
         {
-            string key = state.Current.KeyName!;
+            string key = state.Current.JsonPropertyNameAsString!;
             ((Dictionary<string, TValue>)state.Current.ReturnValue!)[key] = value;
         }
 
-        internal override bool CanHaveMetadata => false;
+        internal override bool CanHaveIdMetadata => false;
 
         protected override void CreateCollection(ref ReadStack state)
         {

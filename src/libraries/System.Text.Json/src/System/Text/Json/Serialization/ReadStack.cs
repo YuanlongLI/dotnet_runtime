@@ -221,18 +221,9 @@ namespace System.Text.Json
                 string? propertyName = GetPropertyName(frame);
                 AppendPropertyName(sb, propertyName);
 
-                // For metadata properties, include the name.
-                propertyName = JsonSerializer.GetMetadataPropertyName(in frame);
-                AppendPropertyName(sb, propertyName);
-
                 if (frame.JsonClassInfo != null)
                 {
-                    if (frame.IsProcessingDictionary())
-                    {
-                        // For dictionaries add the key.
-                        AppendPropertyName(sb, frame.KeyName);
-                    }
-                    else if (frame.IsProcessingEnumerable())
+                    if (frame.IsProcessingEnumerable())
                     {
                         IEnumerable enumerable = (IEnumerable)frame.ReturnValue!;
                         if (enumerable != null)
@@ -296,7 +287,7 @@ namespace System.Text.Json
                     utf8PropertyName = frame.JsonPropertyInfo?.JsonPropertyName;
                     if (utf8PropertyName == null)
                     {
-                        // Attempt to get the JSON property name from the property name specified in re-entry.
+                        // Attempt to get the JSON property name set manually for edge cases.
                         propertyName = frame.JsonPropertyNameAsString;
                     }
                 }

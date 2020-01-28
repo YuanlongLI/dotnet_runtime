@@ -11,7 +11,7 @@ namespace System.Text.Json.Serialization.Converters
     {
         protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
         {
-            string key = state.Current.KeyName!;
+            string key = state.Current.JsonPropertyNameAsString!;
             ((Dictionary<string, TValue>)state.Current.ReturnValue!)[key] = value;
         }
 

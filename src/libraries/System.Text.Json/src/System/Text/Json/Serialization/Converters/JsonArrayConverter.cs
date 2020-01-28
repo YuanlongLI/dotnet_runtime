@@ -14,7 +14,7 @@ namespace System.Text.Json.Serialization.Converters
         : JsonIEnumerableDefaultConverter<TCollection, TElement>
         where TCollection: IEnumerable
     {
-        internal override bool CanHaveMetadata => false;
+        internal override bool CanHaveIdMetadata => false;
 
         protected override void Add(TElement value, ref ReadStack state)
         {

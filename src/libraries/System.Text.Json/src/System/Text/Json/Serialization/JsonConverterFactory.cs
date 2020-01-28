@@ -40,7 +40,7 @@ namespace System.Text.Json.Serialization
 
         internal override JsonPropertyInfo CreateJsonPropertyInfo()
         {
-            throw new NotSupportedException();
+            throw new InvalidOperationException();
         }
 
         internal sealed override Type? ElementType => null;
@@ -58,12 +58,12 @@ namespace System.Text.Json.Serialization
             ref ReadStack state,
             out object? value)
         {
-            throw new NotSupportedException();
+            throw new InvalidOperationException();
         }
 
         internal override sealed bool TryWriteAsObject(Utf8JsonWriter writer, object? value, JsonSerializerOptions options, ref WriteStack state)
         {
-            throw new NotSupportedException();
+            throw new InvalidOperationException();
         }
 
         internal override sealed Type TypeToConvert => null!;

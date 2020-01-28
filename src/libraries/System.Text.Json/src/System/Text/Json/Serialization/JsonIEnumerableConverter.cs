@@ -11,7 +11,6 @@ namespace System.Text.Json.Serialization
     {
         private Type _elementType = typeof(TElement);
 
-        internal override bool CanHaveValuesMetadata => true;
         internal override ClassType ClassType => ClassType.Enumerable;
         internal override Type ElementType => _elementType;
     }

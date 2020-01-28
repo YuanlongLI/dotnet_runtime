@@ -39,6 +39,14 @@ namespace System.Text.Json
                 propertyName = unescapedPropertyName;
             }
 
+            if (options.ReferenceHandling.ShouldReadPreservedReferences())
+            {
+                if (unescapedPropertyName.Length > 0 && unescapedPropertyName[0] == '$')
+                {
+                    ThrowUnexpectedMetadataException(unescapedPropertyName, ref reader, ref state);
+                }
+            }
+
             jsonPropertyInfo = state.Current.JsonClassInfo.GetProperty(propertyName, ref state.Current);
 
             // Increment PropertyIndex so GetProperty() starts with the next property the next time this function is called.
@@ -47,22 +55,10 @@ namespace System.Text.Json
             // Determine if we should use the extension property.
             if (jsonPropertyInfo == JsonPropertyInfo.s_missingProperty)
             {
-                if (options.ReferenceHandling.ShouldReadPreservedReferences())
-                {
-                    if (unescapedPropertyName.Length > 0 && unescapedPropertyName[0] == '$')
-                    {
-                        // Ensure JsonPath doesn't attempt to use the previous property.
-                        state.Current.JsonPropertyInfo = null!;
-
-                        ThrowHelper.ThrowJsonException_MetadataInvalidPropertyWithLeadingDollarSign(unescapedPropertyName, ref state, reader);
-                    }
-                }
-
                 JsonPropertyInfo? dataExtProperty = state.Current.JsonClassInfo.DataExtensionProperty;
                 if (dataExtProperty != null)
                 {
-                    state.Current.JsonPropertyName = propertyName.ToArray();
-                    state.Current.KeyName = JsonHelpers.Utf8GetString(propertyName);
+                    state.Current.JsonPropertyNameAsString = JsonHelpers.Utf8GetString(propertyName);
                     CreateDataExtensionProperty(obj, dataExtProperty);
                     jsonPropertyInfo = dataExtProperty;
                 }

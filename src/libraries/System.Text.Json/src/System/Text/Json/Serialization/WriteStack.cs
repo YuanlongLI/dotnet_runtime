@@ -84,22 +84,6 @@ namespace System.Text.Json
             }
         }
 
-        public MetadataPropertyName GetResolvedReferenceHandling(JsonConverter converter, object value, out string? referenceId)
-        {
-            if (!converter.CanHaveMetadata)
-            {
-                referenceId = default;
-                return MetadataPropertyName.NoMetadata;
-            }
-
-            if (ReferenceResolver.TryGetOrAddReferenceOnSerialize(value, out referenceId))
-            {
-                return MetadataPropertyName.Ref;
-            }
-
-            return MetadataPropertyName.Id;
-        }
-
         public void Push()
         {
             if (_continuationCount == 0)

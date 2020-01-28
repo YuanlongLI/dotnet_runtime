@@ -95,7 +95,7 @@ namespace System.Text.Json.Serialization.Converters
                 {
                     if (reader.TokenType == JsonTokenType.StartArray)
                     {
-                        state.Current.ObjectState = StackFrameObjectState.MetataPropertyValue;
+                        state.Current.ObjectState = StackFrameObjectState.MetadataPropertyValue;
                     }
                     else if (shouldReadPreservedReferences)
                     {
@@ -113,7 +113,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
 
                 // Handle the metadata properties.
-                if (shouldReadPreservedReferences && state.Current.ObjectState < StackFrameObjectState.MetataPropertyValue)
+                if (shouldReadPreservedReferences && state.Current.ObjectState < StackFrameObjectState.MetadataPropertyValue)
                 {
                     if (this.ResolveMetadata(ref reader, ref state, out value))
                     {
@@ -137,8 +137,8 @@ namespace System.Text.Json.Serialization.Converters
                         value = (TCollection)state.Current.ReturnValue!;
                         if (!state.ReferenceResolver.AddReferenceOnDeserialize(state.Current.MetadataId, value))
                         {
-                            // Reset so JsonPath throws exception with $id in it.
-                            state.Current.MetadataPropertyName = MetadataPropertyName.Id;
+                            // Set so JsonPath throws exception with $id in it.
+                            state.Current.JsonPropertyName = JsonSerializer.s_metadataId.EncodedUtf8Bytes.ToArray();
 
                             ThrowHelper.ThrowJsonException_MetadataDuplicateIdFound(state.Current.MetadataId);
                         }
@@ -170,10 +170,6 @@ namespace System.Text.Json.Serialization.Converters
                         {
                             if (reader.TokenType == JsonTokenType.EndArray)
                             {
-                                // Clear the MetadataPropertyName in case we were processing $values since
-                                // we are not longer processing $values.
-                                state.Current.MetadataPropertyName = MetadataPropertyName.NoMetadata;
-
                                 break;
                             }
 
@@ -190,6 +186,7 @@ namespace System.Text.Json.Serialization.Converters
                             }
 
                             Add(element, ref state);
+
                             // No need to set PropertyState to TryRead since we're done with this element now.
                             state.Current.EndElement();
                         }
@@ -213,6 +210,11 @@ namespace System.Text.Json.Serialization.Converters
 
                         if (reader.TokenType != JsonTokenType.EndObject)
                         {
+                            if (reader.TokenType == JsonTokenType.PropertyName)
+                            {
+                                state.Current.JsonPropertyName = JsonSerializer.GetSpan(ref reader).ToArray();
+                            }
+
                             ThrowHelper.ThrowJsonException_MetadataPreservedArrayInvalidProperty(typeToConvert, reader, ref state);
                         }
                     }

@@ -222,7 +222,7 @@ namespace System.Text.Json.Serialization.Converters
 
                 converter = (JsonConverter)Activator.CreateInstance(
                     genericType,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                    BindingFlags.Instance | BindingFlags.Public,
                     binder: null,
                     args: null,
                     culture: null)!;

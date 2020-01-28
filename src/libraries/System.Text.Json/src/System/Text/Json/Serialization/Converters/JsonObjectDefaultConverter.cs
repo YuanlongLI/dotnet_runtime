@@ -90,7 +90,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
 
                 // Handle the metadata properties.
-                if (state.Current.ObjectState < StackFrameObjectState.MetataPropertyValue)
+                if (state.Current.ObjectState < StackFrameObjectState.MetadataPropertyValue)
                 {
                     if (shouldReadPreservedReferences)
                     {
@@ -98,11 +98,6 @@ namespace System.Text.Json.Serialization.Converters
                         {
                             if (state.Current.ObjectState == StackFrameObjectState.MetadataRefPropertyEndObject)
                             {
-                                if (!CanHaveMetadata)
-                                {
-                                    ThrowHelper.ThrowJsonException_MetadataCannotParsePreservedObjectIntoImmutable(TypeToConvert);
-                                }
-
                                 return true;
                             }
                         }
@@ -112,7 +107,7 @@ namespace System.Text.Json.Serialization.Converters
                         }
                     }
 
-                    state.Current.ObjectState = StackFrameObjectState.MetataPropertyValue;
+                    state.Current.ObjectState = StackFrameObjectState.MetadataPropertyValue;
                 }
 
                 if (state.Current.ObjectState < StackFrameObjectState.CreatedObject)
@@ -127,8 +122,8 @@ namespace System.Text.Json.Serialization.Converters
                     {
                         if (!state.ReferenceResolver.AddReferenceOnDeserialize(state.Current.MetadataId, obj))
                         {
-                            // Reset so JsonPath throws exception with $id in it.
-                            state.Current.MetadataPropertyName = MetadataPropertyName.Id;
+                            // Set so JsonPath throws exception with $id in it.
+                            state.Current.JsonPropertyName = JsonSerializer.s_metadataId.EncodedUtf8Bytes.ToArray();
 
                             ThrowHelper.ThrowJsonException_MetadataDuplicateIdFound(state.Current.MetadataId);
                         }
@@ -289,7 +284,6 @@ namespace System.Text.Json.Serialization.Converters
                 {
                     if (JsonSerializer.WriteReferenceForObject(this, objectValue, ref state, writer) == MetadataPropertyName.Ref)
                     {
-                        writer.WriteEndObject();
                         return true;
                     }
                 }
@@ -355,7 +349,6 @@ namespace System.Text.Json.Serialization.Converters
                     {
                         if (JsonSerializer.WriteReferenceForObject(this, objectValue, ref state, writer) == MetadataPropertyName.Ref)
                         {
-                            writer.WriteEndObject();
                             return true;
                         }
                     }

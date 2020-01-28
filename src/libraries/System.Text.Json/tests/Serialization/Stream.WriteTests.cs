@@ -314,10 +314,12 @@ namespace System.Text.Json.Serialization.Tests
         [InlineData(2, false, false)]
         [InlineData(4, false, false)]
         [InlineData(8, false, false)]
-        [InlineData(16, false, false)]
+        [InlineData(16, false, false)] // This results a reader\writer depth of 324 which currently works on all test platforms.
         public static async Task DeepNestedJsonFileTest(int depthFactor, bool ignoreNull, bool writeIndented)
         {
-            int length = 10 * depthFactor;
+            const int ListLength = 10;
+
+            int length = ListLength * depthFactor;
             List<Order>[] orders = new List<Order>[length];
             orders[0] = PopulateLargeObject(1);
             for (int i = 1; i < length; i++ )
@@ -328,7 +330,7 @@ namespace System.Text.Json.Serialization.Tests
 
             JsonSerializerOptions options = new JsonSerializerOptions()
             {
-                MaxDepth = depthFactor * 64,
+                MaxDepth = (ListLength * depthFactor * 2) + 4, // Order-to-RelatedOrder has a depth of 2.
                 IgnoreNullValues = ignoreNull,
                 WriteIndented = writeIndented
             };
@@ -357,9 +359,11 @@ namespace System.Text.Json.Serialization.Tests
         [Theory]
         [InlineData(1)]
         [InlineData(16)]
-        public static async Task DeepNestedJsonFileCircularDependencyTest(int depthFactor)
+        public static async Task NestedJsonFileCircularDependencyTest(int depthFactor)
         {
-            int length = 10 * depthFactor;
+            const int ListLength = 10;
+
+            int length = ListLength * depthFactor;
             List<Order>[] orders = new List<Order>[length];
             orders[0] = PopulateLargeObject(1000);
             for (int i = 1; i < length; i++)
@@ -367,13 +371,18 @@ namespace System.Text.Json.Serialization.Tests
                 orders[i] = PopulateLargeObject(1);
                 orders[i - 1][0].RelatedOrder = orders[i];
             }
-            orders[length - 1][0].RelatedOrder = orders[0];
 
             JsonSerializerOptions options = new JsonSerializerOptions()
             {
-                MaxDepth = depthFactor * 64,
                 IgnoreNullValues = true
             };
+
+            // Ensure no exception for default settings and no cycle.
+            // Options.MaxDepth is the default value of 64.
+            JsonSerializer.Serialize(orders[0], options);
+
+            // Create a cycle.
+            orders[length - 1][0].RelatedOrder = orders[0];
 
             Assert.Throws<JsonException> (() => JsonSerializer.Serialize(orders[0], options));
 

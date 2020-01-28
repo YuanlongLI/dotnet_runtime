@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -93,27 +91,6 @@ namespace System.Text.Json
                         return typeToCheck;
                     }
                 }
-            }
-
-            return null;
-        }
-
-        internal static Type? GetCompatibleNonGenericBaseClass(this Type type, string baseTypeAssemblyQualifiedNamePrefix)
-        {
-            Type baseTypeToCheck = type;
-
-            while (baseTypeToCheck != null && baseTypeToCheck != typeof(object))
-            {
-                if (!baseTypeToCheck.IsGenericType)
-                {
-                    Type nonGenericTypeToCheck = baseTypeToCheck;
-                    if (nonGenericTypeToCheck.AssemblyQualifiedName!.StartsWith(baseTypeAssemblyQualifiedNamePrefix))
-                    {
-                        return baseTypeToCheck;
-                    }
-                }
-
-                baseTypeToCheck = baseTypeToCheck.BaseType!;
             }
 
             return null;
@@ -277,8 +254,13 @@ namespace System.Text.Json
 
         public static bool IsNonGenericStackOrQueue(this Type type)
         {
-            return type.GetCompatibleNonGenericBaseClass("System.Collections.Stack, System.Collections.NonGeneric") != null ||
-                type.GetCompatibleNonGenericBaseClass("System.Collections.Queue, System.Collections.NonGeneric") != null;
+            Type? typeOfStack = Type.GetType("System.Collections.Stack, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+            Type? typeOfQueue = Type.GetType("System.Collections.Queue, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+
+            Debug.Assert(typeOfStack != null);
+            Debug.Assert(typeOfQueue != null);
+
+            return typeOfStack.IsAssignableFrom(type) || typeOfQueue.IsAssignableFrom(type);
         }
     }
 }

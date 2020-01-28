@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
+
 namespace System.Text.Json.Serialization.Converters
 {
     /// <summary>
@@ -16,7 +18,7 @@ namespace System.Text.Json.Serialization.Converters
         protected abstract void Add(TValue value, JsonSerializerOptions options, ref ReadStack state);
 
         /// <summary>
-        /// When overridden, converts the temporary collection held in state.ReturnValue to the final collection.
+        /// When overridden, converts the temporary collection held in state.Current.ReturnValue to the final collection.
         /// This is used with immutable collections.
         /// </summary>
         protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }
@@ -103,7 +105,7 @@ namespace System.Text.Json.Serialization.Converters
                             ThrowHelper.ThrowJsonException_DeserializeUnableToConvertValue(TypeToConvert);
                         }
 
-                        state.Current.KeyName = reader.GetString();
+                        state.Current.JsonPropertyNameAsString = reader.GetString();
 
                         // Read the value and add.
                         reader.Read();
@@ -128,7 +130,7 @@ namespace System.Text.Json.Serialization.Converters
                             ThrowHelper.ThrowJsonException_DeserializeUnableToConvertValue(TypeToConvert);
                         }
 
-                        state.Current.KeyName = reader.GetString();
+                        state.Current.JsonPropertyNameAsString = reader.GetString();
 
                         // Read the value and add.
                         reader.Read();
@@ -150,7 +152,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
 
                 // Handle the metadata properties.
-                if (shouldReadPreservedReferences && state.Current.ObjectState < StackFrameObjectState.MetataPropertyValue)
+                if (shouldReadPreservedReferences && state.Current.ObjectState < StackFrameObjectState.MetadataPropertyValue)
                 {
                     if (this.ResolveMetadata(ref reader, ref state, out value))
                     {
@@ -171,16 +173,13 @@ namespace System.Text.Json.Serialization.Converters
 
                     if (state.Current.MetadataId != null)
                     {
-                        if (!CanHaveMetadata)
-                        {
-                            ThrowHelper.ThrowJsonException_MetadataCannotParsePreservedObjectIntoImmutable(TypeToConvert);
-                        }
+                        Debug.Assert(CanHaveIdMetadata);
 
                         value = (TCollection)state.Current.ReturnValue!;
                         if (!state.ReferenceResolver.AddReferenceOnDeserialize(state.Current.MetadataId, value))
                         {
-                            // Reset so JsonPath throws exception with $id in it.
-                            state.Current.MetadataPropertyName = MetadataPropertyName.Id;
+                            // Set so JsonPath throws exception with $id in it.
+                            state.Current.JsonPropertyName = JsonSerializer.s_metadataId.EncodedUtf8Bytes.ToArray();
 
                             ThrowHelper.ThrowJsonException_MetadataDuplicateIdFound(state.Current.MetadataId);
                         }
@@ -225,11 +224,11 @@ namespace System.Text.Json.Serialization.Converters
                             ReadOnlySpan<byte> propertyName = JsonSerializer.GetSpan(ref reader);
                             if (propertyName.Length > 0 && propertyName[0] == '$')
                             {
-                                ThrowHelper.ThrowJsonException_MetadataInvalidPropertyWithLeadingDollarSign(propertyName, ref state, reader);
+                                JsonSerializer.ThrowUnexpectedMetadataException(propertyName, ref reader, ref state);
                             }
                         }
 
-                        state.Current.KeyName = reader.GetString();
+                        state.Current.JsonPropertyNameAsString = reader.GetString();
                     }
 
                     if (state.Current.PropertyState < StackFramePropertyState.ReadValue)
@@ -288,7 +287,6 @@ namespace System.Text.Json.Serialization.Converters
                     {
                         if (JsonSerializer.WriteReferenceForObject(this, dictionary, ref state, writer) == MetadataPropertyName.Ref)
                         {
-                            writer.WriteEndObject();
                             return true;
                         }
                     }

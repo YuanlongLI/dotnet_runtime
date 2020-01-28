@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization.Converters;
-using System.Runtime.CompilerServices;
 
 namespace System.Text.Json
 {
@@ -324,14 +323,11 @@ namespace System.Text.Json
             {
                 if (_memberAccessorStrategy == null)
                 {
-                    if (RuntimeFeature.IsDynamicCodeSupported)
-                    {
-                        _memberAccessorStrategy = new ReflectionEmitMemberAccessor();
-                    }
-                    else
-                    {
-                        _memberAccessorStrategy = new ReflectionMemberAccessor();
-                    }
+#if NETFRAMEWORK || NETCOREAPP
+                    _memberAccessorStrategy = new ReflectionEmitMemberAccessor();
+#else
+                    _memberAccessorStrategy = new ReflectionMemberAccessor();
+#endif
                 }
 
                 return _memberAccessorStrategy;

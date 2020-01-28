@@ -3,9 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -20,15 +18,15 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
         {
-            JsonClassInfo classInfo = state.Current.JsonClassInfo;
+            JsonClassInfo.ConstructorDelegate? constructorDelegate = state.Current.JsonClassInfo.CreateObject;
 
-            if (classInfo.CreateObject == null)
+            if (constructorDelegate == null)
             {
-                ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(classInfo.Type);
+                ThrowHelper.ThrowNotSupportedException_DeserializeNoParameterlessConstructor(TypeToConvert);
             }
 
-            state.Current.ReturnValue = classInfo.CreateObject()!;
-            state.Current.AddMethodDelegate = GetOrAddEnumerableAddMethodDelegate(classInfo.Type, options);
+            state.Current.ReturnValue = constructorDelegate();
+            state.Current.AddMethodDelegate = GetAddMethodDelegate(options);
         }
 
         protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
@@ -70,17 +68,17 @@ namespace System.Text.Json.Serialization.Converters
 
         internal override Type RuntimeType => TypeToConvert;
 
-        private readonly ConcurrentDictionary<Type, Action<TCollection, object>> _delegates = new ConcurrentDictionary<Type, Action<TCollection, object>>();
+        private Action<TCollection, object>? _addMethodDelegate;
 
-        internal Action<TCollection, object> GetOrAddEnumerableAddMethodDelegate(Type type, JsonSerializerOptions options)
+        internal Action<TCollection, object> GetAddMethodDelegate(JsonSerializerOptions options)
         {
-            if (!_delegates.TryGetValue(type, out Action<TCollection, object>? result))
+            if (_addMethodDelegate == null)
             {
                 // We verified this exists when we created the converter in the enumerable converter factory.
-                result = options.MemberAccessorStrategy.CreateAddMethodDelegate<TCollection>();
+                _addMethodDelegate = options.MemberAccessorStrategy.CreateAddMethodDelegate<TCollection>();
             }
 
-            return result;
+            return _addMethodDelegate;
         }
     }
 }

@@ -16,7 +16,7 @@ namespace System.Text.Json
         MetadataRefPropertyEndObject, // Read EndObject for $ref.
         MetadataValuesPropertyName, // Read $values property name.
         MetadataValuesPropertyStartArray, // Read StartArray for $values.
-        MetataPropertyValue, // Whether all metadata properties has been read.
+        MetadataPropertyValue, // Whether all metadata properties has been read.
 
         CreatedObject,
         ReadElements,

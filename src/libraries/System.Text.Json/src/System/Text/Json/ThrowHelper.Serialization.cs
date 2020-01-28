@@ -54,21 +54,6 @@ namespace System.Text.Json
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowJsonException_DeserializeUnableToConvertValue(Type propertyType, string path, Exception? innerException = null)
-        {
-            string message = SR.Format(SR.DeserializeUnableToConvertValue, propertyType) + $" Path: {path}.";
-            throw new JsonException(message, path, null, null, innerException);
-        }
-
-        [DoesNotReturn]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowJsonException_DepthTooLarge(int currentDepth, JsonSerializerOptions options)
-        {
-            throw new JsonException(SR.Format(SR.DepthTooLarge, currentDepth, options.EffectiveMaxDepth));
-        }
-
-        [DoesNotReturn]
-        [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowJsonException_SerializationConverterRead(JsonConverter? converter)
         {
             var ex = new JsonException(SR.Format(SR.SerializationConverterRead, converter));
@@ -330,25 +315,9 @@ namespace System.Text.Json
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowJsonException_MetadataReferenceObjectCannotContainOtherProperties_Dictionary(ref ReadStackFrame current)
-        {
-            current.KeyName = null;
-            ThrowJsonException_MetadataReferenceObjectCannotContainOtherProperties();
-        }
-
-        [DoesNotReturn]
-        [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowJsonException_MetadataIdIsNotFirstProperty()
         {
             ThrowJsonException(SR.MetadataIdIsNotFirstProperty);
-        }
-
-        [DoesNotReturn]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowJsonException_MetadataIdIsNotFirstProperty_Dictionary(ref ReadStackFrame current)
-        {
-            current.KeyName = null;
-            ThrowJsonException_MetadataIdIsNotFirstProperty();
         }
 
         [DoesNotReturn]
@@ -365,7 +334,7 @@ namespace System.Text.Json
             // Set PropertyInfo or KeyName to write down the conflicting property name in JsonException.Path
             if (state.Current.IsProcessingDictionary())
             {
-                state.Current.KeyName = reader.GetString();
+                state.Current.JsonPropertyNameAsString = reader.GetString();
             }
             else
             {
