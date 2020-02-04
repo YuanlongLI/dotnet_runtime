@@ -358,10 +358,10 @@ namespace System.Text.Json.Serialization.Tests
 
         [Theory]
         [InlineData(1)]
-        [InlineData(16)]
+        [InlineData(4)]
         public static async Task NestedJsonFileCircularDependencyTest(int depthFactor)
         {
-            const int ListLength = 10;
+            const int ListLength = 2;
 
             int length = ListLength * depthFactor;
             List<Order>[] orders = new List<Order>[length];
@@ -377,8 +377,7 @@ namespace System.Text.Json.Serialization.Tests
                 IgnoreNullValues = true
             };
 
-            // Ensure no exception for default settings and no cycle.
-            // Options.MaxDepth is the default value of 64.
+            // Ensure no exception for default settings (MaxDepth=64) and no cycle.
             JsonSerializer.Serialize(orders[0], options);
 
             // Create a cycle.

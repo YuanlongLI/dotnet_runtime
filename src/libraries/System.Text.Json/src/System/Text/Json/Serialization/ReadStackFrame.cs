@@ -21,10 +21,7 @@ namespace System.Text.Json
 
         // Validation state.
         public int OriginalDepth;
-        public int OriginalPropertyDepth;
-        public long OriginalPropertyBytesConsumed;
         public JsonTokenType OriginalTokenType;
-        public JsonTokenType OriginalPropertyTokenType;
 
         // Current object (POCO or IEnumerable).
         public object? ReturnValue; // The current return value used for re-entry.
@@ -51,16 +48,10 @@ namespace System.Text.Json
 
             // No need to clear these since they are overwritten each time:
             //  UseExtensionProperty
-            //  OriginalPropertyDepth
-            //  OriginalPropertyBytesConsumed
-            //  OriginalPropertyTokenType
         }
 
         public void EndElement()
         {
-            OriginalPropertyDepth = 0;
-            OriginalPropertyBytesConsumed = 0;
-            OriginalPropertyTokenType = JsonTokenType.None;
             JsonPropertyNameAsString = null;
             PropertyState = StackFramePropertyState.None;
         }

@@ -41,17 +41,7 @@ namespace System.Text.Json
 
                 ReadOnlySpan<byte> propertyName = GetSpan(ref reader);
                 MetadataPropertyName metadata = GetMetadataPropertyName(propertyName);
-                if (metadata == MetadataPropertyName.Ref)
-                {
-                    state.Current.JsonPropertyName = propertyName.ToArray();
-                    if (converter.TypeToConvert.IsValueType)
-                    {
-                        ThrowHelper.ThrowJsonException_MetadataInvalidReferenceToValueType(converter.TypeToConvert);
-                    }
-
-                    state.Current.ObjectState = StackFrameObjectState.MetadataRefProperty;
-                }
-                else if (metadata == MetadataPropertyName.Id)
+                if (metadata == MetadataPropertyName.Id)
                 {
                     state.Current.JsonPropertyName = propertyName.ToArray();
                     if (!converter.CanHaveIdMetadata)
@@ -60,6 +50,16 @@ namespace System.Text.Json
                     }
 
                     state.Current.ObjectState = StackFrameObjectState.MetadataIdProperty;
+                }
+                else if (metadata == MetadataPropertyName.Ref)
+                {
+                    state.Current.JsonPropertyName = propertyName.ToArray();
+                    if (converter.TypeToConvert.IsValueType)
+                    {
+                        ThrowHelper.ThrowJsonException_MetadataInvalidReferenceToValueType(converter.TypeToConvert);
+                    }
+
+                    state.Current.ObjectState = StackFrameObjectState.MetadataRefProperty;
                 }
                 else if (metadata == MetadataPropertyName.Values)
                 {
@@ -154,13 +154,11 @@ namespace System.Text.Json
 
                 if (reader.TokenType != JsonTokenType.EndObject)
                 {
-                    if (reader.TokenType == JsonTokenType.PropertyName)
-                    {
-                        state.Current.JsonPropertyName = GetSpan(ref reader).ToArray();
-                        ThrowHelper.ThrowJsonException_MetadataReferenceObjectCannotContainOtherProperties();
-                    }
+                    // We just read a property. The only valid next tokens are EndObject and PropertyName.
+                    Debug.Assert(reader.TokenType == JsonTokenType.PropertyName);
 
-                    ThrowHelper.ThrowJsonException();
+                    state.Current.JsonPropertyName = GetSpan(ref reader).ToArray();
+                    ThrowHelper.ThrowJsonException_MetadataReferenceObjectCannotContainOtherProperties();
                 }
 
                 value = (T)state.Current.ReturnValue!;

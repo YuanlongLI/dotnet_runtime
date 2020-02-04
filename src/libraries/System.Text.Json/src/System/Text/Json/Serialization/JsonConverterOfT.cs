@@ -126,15 +126,15 @@ namespace System.Text.Json.Serialization
                 else
 #endif
                 {
-                    state.Current.OriginalPropertyTokenType = reader.TokenType;
-                    state.Current.OriginalPropertyDepth = reader.CurrentDepth;
-                    state.Current.OriginalPropertyBytesConsumed = reader.BytesConsumed;
+                    JsonTokenType originalPropertyTokenType = reader.TokenType;
+                    int originalPropertyDepth = reader.CurrentDepth;
+                    long originalPropertyBytesConsumed = reader.BytesConsumed;
 
                     value = Read(ref reader, typeToConvert, options);
                     VerifyRead(
-                        state.Current.OriginalPropertyTokenType,
-                        state.Current.OriginalPropertyDepth,
-                        state.Current.OriginalPropertyBytesConsumed != reader.BytesConsumed,
+                        originalPropertyTokenType,
+                        originalPropertyDepth,
+                        originalPropertyBytesConsumed != reader.BytesConsumed,
                         ref reader);
                 }
 
@@ -242,13 +242,12 @@ namespace System.Text.Json.Serialization
 
             if (ClassType == ClassType.Value)
             {
-                if (!state.IsContinuation)
-                {
-                    state.Current.OriginalPropertyDepth = writer.CurrentDepth;
-                }
+                Debug.Assert(!state.IsContinuation);
+
+                int originalPropertyDepth = writer.CurrentDepth;
 
                 Write(writer, value, options);
-                VerifyWrite(state.Current.OriginalPropertyDepth, writer);
+                VerifyWrite(originalPropertyDepth, writer);
 
                 return true;
             }
@@ -289,10 +288,9 @@ namespace System.Text.Json.Serialization
 
             if (ClassType == ClassType.Value)
             {
-                if (!state.IsContinuation)
-                {
-                    state.Current.OriginalPropertyDepth = writer.CurrentDepth;
-                }
+                Debug.Assert(!state.IsContinuation);
+
+                int originalPropertyDepth = writer.CurrentDepth;
 
                 // Ignore the naming policy for extension data.
                 state.Current.IgnoreDictionaryKeyPolicy = true;
@@ -300,7 +298,7 @@ namespace System.Text.Json.Serialization
                 success = dictionaryConverter.OnWriteResume(writer, value, options, ref state);
                 if (success)
                 {
-                    VerifyWrite(state.Current.OriginalPropertyDepth, writer);
+                    VerifyWrite(originalPropertyDepth, writer);
                 }
             }
             else

@@ -44,7 +44,6 @@ namespace System.Text.Json
         /// Validation state for a class.
         /// </summary>
         public int OriginalDepth;
-        public int OriginalPropertyDepth;
 
         // Class-level state for collections.
         public bool ProcessedStartToken;
@@ -77,7 +76,6 @@ namespace System.Text.Json
 
         public void EndElement()
         {
-            OriginalPropertyDepth = 0;
             PropertyState = StackFramePropertyState.None;
         }
 
@@ -86,7 +84,6 @@ namespace System.Text.Json
             DeclaredJsonPropertyInfo = null!;
             JsonPropertyNameAsString = null;
             KeyName = null!;
-            OriginalPropertyDepth = 0;
             PolymorphicJsonPropertyInfo = null;
             PropertyState = StackFramePropertyState.None;
         }

@@ -60,7 +60,7 @@ namespace System.Text.Json.Serialization.Converters
                     // Skip the property if not found.
                     if (!jsonPropertyInfo.ShouldDeserialize)
                     {
-                        reader.TrySkip();
+                        reader.Skip();
                         continue;
                     }
 
