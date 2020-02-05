@@ -12,8 +12,6 @@ namespace System.Text.Json.Serialization
     /// <typeparam name="T">The <see cref="Type"/> to convert.</typeparam>
     public abstract class JsonConverter<T> : JsonConverter
     {
-        private Type _typeToConvert = typeof(T);
-
         /// <summary>
         /// When overidden, constructs a new <see cref="JsonConverter{T}"/> instance.
         /// </summary>
@@ -328,7 +326,7 @@ namespace System.Text.Json.Serialization
             return success;
         }
 
-        internal override sealed Type TypeToConvert => _typeToConvert;
+        internal override sealed Type TypeToConvert => typeof(T);
 
         internal void VerifyRead(JsonTokenType tokenType, int depth, bool hasConsumedAnyBytes, ref Utf8JsonReader reader)
         {

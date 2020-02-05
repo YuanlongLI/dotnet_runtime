@@ -46,8 +46,7 @@ namespace System.Text.Json.Serialization
                 bool complete = reader.TrySkip();
 
                 // We need to restore the state in all cases as we need to be positioned back before
-                // the current token to either attempt to skip again or to actually read the value in
-                // HandleValue below.
+                // the current token to either attempt to skip again or to actually read the value.
 
                 reader = new Utf8JsonReader(reader.OriginalSpan.Slice(checked((int)initialReaderBytesConsumed)),
                     isFinalBlock: reader.IsFinalBlock,

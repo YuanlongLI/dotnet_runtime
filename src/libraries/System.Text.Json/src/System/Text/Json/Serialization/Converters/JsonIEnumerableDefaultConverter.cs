@@ -11,7 +11,7 @@ namespace System.Text.Json.Serialization.Converters
     {
         protected abstract void Add(TElement value, ref ReadStack state);
 
-        protected virtual void CreateCollection(ref ReadStack state, JsonSerializerOptions options) { }
+        protected abstract void CreateCollection(ref ReadStack state, JsonSerializerOptions options);
         protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }
 
         protected static JsonConverter<TElement> GetElementConverter(ref ReadStack state)
