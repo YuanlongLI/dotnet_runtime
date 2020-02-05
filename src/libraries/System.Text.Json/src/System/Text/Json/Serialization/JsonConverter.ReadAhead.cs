@@ -28,11 +28,10 @@ namespace System.Text.Json.Serialization
 
         internal static bool DoSingleValueReadWithReadAhead(ref Utf8JsonReader reader, ref ReadStack state)
         {
-            // When we're reading ahead we always have to save the state
-            // as we don't know if the next token is an opening object or
-            // array brace.
-            state.InitialReaderState = reader.CurrentState;
-            state.InitialReaderBytesConsumed = reader.BytesConsumed;
+            // When we're reading ahead we always have to save the state as we don't know if the next token
+            // is an opening object or an array brace.
+            JsonReaderState initialReaderState = reader.CurrentState;
+            long initialReaderBytesConsumed = reader.BytesConsumed;
 
             if (!reader.Read())
             {
@@ -50,12 +49,12 @@ namespace System.Text.Json.Serialization
                 // the current token to either attempt to skip again or to actually read the value in
                 // HandleValue below.
 
-                reader = new Utf8JsonReader(reader.OriginalSpan.Slice(checked((int)state.InitialReaderBytesConsumed)),
+                reader = new Utf8JsonReader(reader.OriginalSpan.Slice(checked((int)initialReaderBytesConsumed)),
                     isFinalBlock: reader.IsFinalBlock,
-                    state: state.InitialReaderState);
+                    state: initialReaderState);
 
                 Debug.Assert(reader.BytesConsumed == 0);
-                state.BytesConsumed += state.InitialReaderBytesConsumed;
+                state.BytesConsumed += initialReaderBytesConsumed;
 
                 if (!complete)
                 {
@@ -63,7 +62,7 @@ namespace System.Text.Json.Serialization
                     return false;
                 }
 
-                // Success, requeue the reader to the token for HandleValue.
+                // Success, requeue the reader to the start token.
                 reader.Read();
                 Debug.Assert(tokenType == reader.TokenType);
             }

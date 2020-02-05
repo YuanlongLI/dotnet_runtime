@@ -34,10 +34,6 @@ namespace System.Text.Json
         // A field is used instead of a property to avoid value semantics.
         public ReadStackFrame Current;
 
-        // Support the read-ahead feature.
-        public JsonReaderState InitialReaderState;
-        public long InitialReaderBytesConsumed;
-
         public bool IsContinuation => _continuationCount != 0;
         public bool IsLastContinuation => _continuationCount == _count;
 
