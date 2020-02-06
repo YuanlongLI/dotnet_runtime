@@ -25,7 +25,7 @@ namespace System.Text.Json.Serialization
                 return null;
             }
 
-            return () => Activator.CreateInstance(type);
+            return () => Activator.CreateInstance(type, nonPublic: false);
         }
 
         public override Action<TCollection, object?> CreateAddMethodDelegate<TCollection>()
