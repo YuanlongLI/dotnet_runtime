@@ -44,6 +44,12 @@ namespace System.Text.Json.Serialization.Converters
             JsonConverter<TValue> converter = GetValueConverter(ref state);
             do
             {
+                if (ShouldFlush(writer, ref state))
+                {
+                    state.Current.CollectionEnumerator = enumerator;
+                    return false;
+                }
+
                 string key = GetKeyName(enumerator.Current.Key, ref state, options);
                 writer.WritePropertyName(key);
 
@@ -54,7 +60,7 @@ namespace System.Text.Json.Serialization.Converters
                     return false;
                 }
 
-                state.Current.EndElement();
+                state.Current.EndDictionaryElement();
             } while (enumerator.MoveNext());
 
             return true;

@@ -10,30 +10,29 @@ namespace System.Text.Json.Serialization.Converters
     internal abstract class JsonIEnumerableDefaultConverter<TCollection, TElement> : JsonIEnumerableConverter<TCollection, TElement>
     {
         protected abstract void Add(TElement value, ref ReadStack state);
-
         protected abstract void CreateCollection(ref ReadStack state, JsonSerializerOptions options);
         protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }
 
         protected static JsonConverter<TElement> GetElementConverter(ref ReadStack state)
         {
-            JsonConverter<TElement>? converter = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase as JsonConverter<TElement>;
+            JsonConverter<TElement> converter = (JsonConverter<TElement>)state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase;
             if (converter == null)
             {
                 state.Current.JsonClassInfo.ElementClassInfo.PolicyProperty.ThrowCollectionNotSupportedException();
             }
 
-            return converter!;
+            return converter;
         }
 
         protected static JsonConverter<TElement> GetElementConverter(ref WriteStack state)
         {
-            JsonConverter<TElement>? converter = state.Current.DeclaredJsonPropertyInfo.ConverterBase as JsonConverter<TElement>;
+            JsonConverter<TElement> converter = (JsonConverter<TElement>)state.Current.DeclaredJsonPropertyInfo.ConverterBase;
             if (converter == null)
             {
                 state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ThrowCollectionNotSupportedException();
             }
 
-            return converter!;
+            return converter;
         }
 
         internal override bool OnTryRead(

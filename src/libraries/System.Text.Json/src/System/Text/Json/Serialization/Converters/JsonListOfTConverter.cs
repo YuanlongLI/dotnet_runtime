@@ -56,8 +56,6 @@ namespace System.Text.Json.Serialization.Converters
                         state.Current.EnumeratorIndex = ++index;
                         return false;
                     }
-
-                    state.Current.EndElement();
                 }
             }
 

@@ -60,8 +60,6 @@ namespace System.Text.Json.Serialization.Converters
                     state.Current.CollectionEnumerator = enumerator;
                     return false;
                 }
-
-                state.Current.EndElement();
             } while (enumerator.MoveNext());
 
             return true;

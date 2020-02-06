@@ -61,6 +61,7 @@ namespace System.Text.Json.Serialization.Converters
                     if (!jsonPropertyInfo.ShouldDeserialize)
                     {
                         reader.Skip();
+                        state.Current.EndProperty();
                         continue;
                     }
 
@@ -75,6 +76,9 @@ namespace System.Text.Json.Serialization.Converters
                     {
                         jsonPropertyInfo.ReadJsonAndAddExtensionProperty(obj, ref state, ref reader);
                     }
+
+                    // Ensure any exception thrown in the next read does not have a property in its JsonPath.
+                    state.Current.EndProperty();
                 }
             }
             else

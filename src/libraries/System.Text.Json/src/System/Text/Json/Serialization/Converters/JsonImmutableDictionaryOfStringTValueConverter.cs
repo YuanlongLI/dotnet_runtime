@@ -56,7 +56,7 @@ namespace System.Text.Json.Serialization.Converters
                     return false;
                 }
 
-                state.Current.EndElement();
+                state.Current.EndDictionaryElement();
             } while (enumerator.MoveNext());
 
             return true;

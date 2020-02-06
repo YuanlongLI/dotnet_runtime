@@ -74,7 +74,7 @@ namespace System.Text.Json
         /// </remarks>
         public JsonPropertyInfo? PolymorphicJsonPropertyInfo;
 
-        public void EndElement()
+        public void EndDictionaryElement()
         {
             PropertyState = StackFramePropertyState.None;
         }

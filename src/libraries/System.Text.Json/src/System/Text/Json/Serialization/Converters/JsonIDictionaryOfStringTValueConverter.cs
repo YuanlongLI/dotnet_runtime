@@ -24,7 +24,7 @@ namespace System.Text.Json.Serialization.Converters
         {
             JsonClassInfo classInfo = state.Current.JsonClassInfo;
 
-            if ((TypeToConvert.IsInterface || TypeToConvert.IsAbstract))
+            if (TypeToConvert.IsInterface || TypeToConvert.IsAbstract)
             {
                 if (!TypeToConvert.IsAssignableFrom(RuntimeType))
                 {
@@ -70,12 +70,18 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                enumerator = (Dictionary<string, TValue>.Enumerator)state.Current.CollectionEnumerator;
+                enumerator = (IEnumerator<KeyValuePair<string, TValue>>)state.Current.CollectionEnumerator;
             }
 
             JsonConverter<TValue> converter = GetValueConverter(ref state);
             do
             {
+                if (ShouldFlush(writer, ref state))
+                {
+                    state.Current.CollectionEnumerator = enumerator;
+                    return false;
+                }
+
                 string key = GetKeyName(enumerator.Current.Key, ref state, options);
                 writer.WritePropertyName(key);
 
@@ -86,7 +92,7 @@ namespace System.Text.Json.Serialization.Converters
                     return false;
                 }
 
-                state.Current.EndElement();
+                state.Current.EndDictionaryElement();
             } while (enumerator.MoveNext());
 
             return true;

@@ -19,7 +19,7 @@ namespace System.Text.Json.Serialization.Converters
         {
             JsonClassInfo classInfo = state.Current.JsonClassInfo;
 
-            if ((TypeToConvert.IsInterface || TypeToConvert.IsAbstract))
+            if (TypeToConvert.IsInterface || TypeToConvert.IsAbstract)
             {
                 if (!TypeToConvert.IsAssignableFrom(RuntimeType))
                 {
@@ -79,8 +79,6 @@ namespace System.Text.Json.Serialization.Converters
                     state.Current.CollectionEnumerator = enumerator;
                     return false;
                 }
-
-                state.Current.EndElement();
             } while (enumerator.MoveNext());
 
             return true;

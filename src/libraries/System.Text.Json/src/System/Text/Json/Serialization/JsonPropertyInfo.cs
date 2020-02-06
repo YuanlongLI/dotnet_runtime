@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -238,6 +239,7 @@ namespace System.Text.Json
         public bool ShouldSerialize { get; private set; }
         public bool ShouldDeserialize { get; private set; }
 
+        [DoesNotReturn]
         public void ThrowCollectionNotSupportedException()
         {
             throw ThrowHelper.GetNotSupportedException_SerializationNotSupportedCollection(RuntimePropertyType!, ParentClassType, PropertyInfo);

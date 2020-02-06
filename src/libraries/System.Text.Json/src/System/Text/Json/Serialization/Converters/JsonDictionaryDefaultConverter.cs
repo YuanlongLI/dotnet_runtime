@@ -32,13 +32,13 @@ namespace System.Text.Json.Serialization.Converters
 
         protected static JsonConverter<TValue> GetElementConverter(ref ReadStack state)
         {
-            JsonConverter<TValue>? converter = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase as JsonConverter<TValue>;
+            JsonConverter<TValue> converter = (JsonConverter<TValue>)state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase;
             if (converter == null)
             {
                 state.Current.JsonClassInfo.ElementClassInfo.PolicyProperty.ThrowCollectionNotSupportedException();
             }
 
-            return converter!;
+            return converter;
         }
 
         protected string GetKeyName(string key, ref WriteStack state, JsonSerializerOptions options)
@@ -56,7 +56,7 @@ namespace System.Text.Json.Serialization.Converters
             return key;
         }
 
-        protected JsonConverter<TValue> GetValueConverter(ref WriteStack state)
+        protected static JsonConverter<TValue> GetValueConverter(ref WriteStack state)
         {
             JsonConverter<TValue> converter = (JsonConverter<TValue>)state.Current.DeclaredJsonPropertyInfo.ConverterBase;
             if (converter == null)
@@ -64,7 +64,7 @@ namespace System.Text.Json.Serialization.Converters
                 state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ThrowCollectionNotSupportedException();
             }
 
-            return converter!;
+            return converter;
         }
 
         internal override sealed bool OnTryRead(
@@ -269,39 +269,35 @@ namespace System.Text.Json.Serialization.Converters
             JsonSerializerOptions options,
             ref WriteStack state)
         {
-            bool success;
-
             if (dictionary == null)
             {
                 writer.WriteNullValue();
-                success = true;
+                return true;
             }
-            else
+
+            if (!state.Current.ProcessedStartToken)
             {
-                if (!state.Current.ProcessedStartToken)
+                state.Current.ProcessedStartToken = true;
+                writer.WriteStartObject();
+
+                if (options.ReferenceHandling.ShouldWritePreservedReferences())
                 {
-                    state.Current.ProcessedStartToken = true;
-                    writer.WriteStartObject();
-
-                    if (options.ReferenceHandling.ShouldWritePreservedReferences())
+                    if (JsonSerializer.WriteReferenceForObject(this, dictionary, ref state, writer) == MetadataPropertyName.Ref)
                     {
-                        if (JsonSerializer.WriteReferenceForObject(this, dictionary, ref state, writer) == MetadataPropertyName.Ref)
-                        {
-                            return true;
-                        }
+                        return true;
                     }
-
-                    state.Current.DeclaredJsonPropertyInfo = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!;
                 }
 
-                success = OnWriteResume(writer, dictionary, options, ref state);
-                if (success)
+                state.Current.DeclaredJsonPropertyInfo = state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!;
+            }
+
+            bool success = OnWriteResume(writer, dictionary, options, ref state);
+            if (success)
+            {
+                if (!state.Current.ProcessedEndToken)
                 {
-                    if (!state.Current.ProcessedEndToken)
-                    {
-                        state.Current.ProcessedEndToken = true;
-                        writer.WriteEndObject();
-                    }
+                    state.Current.ProcessedEndToken = true;
+                    writer.WriteEndObject();
                 }
             }
 

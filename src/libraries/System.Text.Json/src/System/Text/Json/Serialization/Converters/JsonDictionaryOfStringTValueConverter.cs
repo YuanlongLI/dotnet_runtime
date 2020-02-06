@@ -65,6 +65,12 @@ namespace System.Text.Json.Serialization.Converters
             {
                 do
                 {
+                    if (ShouldFlush(writer, ref state))
+                    {
+                        state.Current.CollectionEnumerator = enumerator;
+                        return false;
+                    }
+
                     TValue element = enumerator.Current.Value;
                     if (state.Current.PropertyState < StackFramePropertyState.Name)
                     {
@@ -79,7 +85,7 @@ namespace System.Text.Json.Serialization.Converters
                         return false;
                     }
 
-                    state.Current.EndElement();
+                    state.Current.EndDictionaryElement();
                 } while (enumerator.MoveNext());
             }
 
