@@ -40,6 +40,8 @@ namespace System.Text.Json
         private bool _ignoreReadOnlyProperties;
         private bool _propertyNameCaseInsensitive;
         private bool _writeIndented;
+        private bool _constructorParameterNameCaseInsensitive;
+        private bool _useConstructorParameterDefaultValues;
 
         /// <summary>
         /// Constructs a new <see cref="JsonSerializerOptions"/> instance.
@@ -314,6 +316,49 @@ namespace System.Text.Json
                 VerifyMutable();
 
                 _referenceHandling = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// <summary>
+        /// Determines whether constructor parameter names use a case-insensitive comparison during deserialization.
+        /// The default value is false.
+        /// </summary>
+        /// <remarks>There is a performance cost associated when the value is true.</remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if this property is set after serialization or deserialization has occurred.
+        /// </exception>
+        public bool ConstructorParameterNameCaseInsensitive
+        {
+            get => _constructorParameterNameCaseInsensitive;
+            set
+            {
+                VerifyMutable();
+                _constructorParameterNameCaseInsensitive = value;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether to use a default value when no JSON property maps to a constructor parameter.
+        /// The default value is false.
+        /// </summary>
+        /// <remarks>
+        /// If the value is set to true and there's no matching JSON, but the parameter has a default value,
+        /// the parameters default value will be passed as the argument.
+        /// If the value is set to true, there's no matching JSON, and the parameter has no default value,
+        /// the default value of the parameter's CLR type will be passed as the argument.
+        /// If the value is set to false and there's no matching JSON, an <see cref="ArgumentException"/>
+        /// will be thrown.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if this property is set after serialization or deserialization has occurred.
+        /// </exception>
+        public bool UseConstructorParameterDefaultValues
+        {
+            get => _useConstructorParameterDefaultValues;
+            set
+            {
+                VerifyMutable();
+                _useConstructorParameterDefaultValues = value;
             }
         }
 

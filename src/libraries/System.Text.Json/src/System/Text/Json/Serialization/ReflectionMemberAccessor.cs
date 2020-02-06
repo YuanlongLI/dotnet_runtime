@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -14,7 +13,7 @@ namespace System.Text.Json
         public override JsonClassInfo.ConstructorDelegate? CreateConstructor(Type type)
         {
             Debug.Assert(type != null);
-            ConstructorInfo? realMethod = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, binder: null, Type.EmptyTypes, modifiers: null);
+            ConstructorInfo? realMethod = type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, binder: null, Type.EmptyTypes, modifiers: null);
 
             if (type.IsAbstract)
             {
@@ -26,7 +25,7 @@ namespace System.Text.Json
                 return null;
             }
 
-            return () => Activator.CreateInstance(type);
+            return () => Activator.CreateInstance(type, nonPublic: false);
         }
 
         public override Action<TCollection, object> CreateAddMethodDelegate<TCollection>()
