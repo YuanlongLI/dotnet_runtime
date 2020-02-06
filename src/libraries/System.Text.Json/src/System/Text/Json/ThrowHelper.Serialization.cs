@@ -21,21 +21,21 @@ namespace System.Text.Json
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static NotSupportedException GetNotSupportedException_SerializationNotSupportedCollection(Type propertyType, Type? parentType, MemberInfo? memberInfo)
+        public static NotSupportedException GetNotSupportedException_SerializationNotSupported(Type propertyType, Type? parentType, MemberInfo? memberInfo)
         {
             if (parentType != null && parentType != typeof(object) && memberInfo != null)
             {
-                return new NotSupportedException(SR.Format(SR.SerializationNotSupportedCollection, propertyType, $"{parentType}.{memberInfo.Name}"));
+                return new NotSupportedException(SR.Format(SR.SerializationNotSupported, propertyType, $"{parentType}.{memberInfo.Name}"));
             }
 
-            return new NotSupportedException(SR.Format(SR.SerializationNotSupportedCollectionType, propertyType));
+            return new NotSupportedException(SR.Format(SR.SerializationNotSupportedType, propertyType));
         }
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static NotSupportedException ThrowNotSupportedException_SerializationNotSupportedCollection(Type propertyType, Type? parentType = null, MemberInfo? memberInfo = null)
+        public static NotSupportedException ThrowNotSupportedException_SerializationNotSupported(Type propertyType, Type? parentType = null, MemberInfo? memberInfo = null)
         {
-            throw GetNotSupportedException_SerializationNotSupportedCollection(propertyType, parentType, memberInfo);
+            throw GetNotSupportedException_SerializationNotSupported(propertyType, parentType, memberInfo);
         }
 
         public static void ThrowInvalidOperationException_SerializerCycleDetected(int maxDepth)

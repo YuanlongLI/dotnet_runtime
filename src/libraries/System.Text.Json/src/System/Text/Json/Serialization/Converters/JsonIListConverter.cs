@@ -41,7 +41,7 @@ namespace System.Text.Json.Serialization.Converters
 
                     if (returnValue.IsReadOnly)
                     {
-                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(TypeToConvert);
+                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(TypeToConvert);
                     }
 
                     state.Current.ReturnValue = returnValue;

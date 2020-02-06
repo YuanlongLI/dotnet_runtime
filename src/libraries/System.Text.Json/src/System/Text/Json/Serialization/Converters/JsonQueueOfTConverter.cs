@@ -18,7 +18,7 @@ namespace System.Text.Json.Serialization.Converters
         {
             if (state.Current.JsonClassInfo.CreateObject == null)
             {
-                ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(state.Current.JsonClassInfo.Type);
+                ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(state.Current.JsonClassInfo.Type);
             }
 
             state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();

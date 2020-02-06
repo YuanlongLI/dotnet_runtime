@@ -242,7 +242,7 @@ namespace System.Text.Json
         [DoesNotReturn]
         public void ThrowCollectionNotSupportedException()
         {
-            throw ThrowHelper.GetNotSupportedException_SerializationNotSupportedCollection(RuntimePropertyType!, ParentClassType, PropertyInfo);
+            throw ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(RuntimePropertyType!, ParentClassType, PropertyInfo);
         }
     }
 }
