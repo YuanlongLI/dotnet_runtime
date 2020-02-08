@@ -106,7 +106,7 @@ namespace System.Text.Json
             JsonClassInfo newClassInfo = options.GetOrAddClass(type);
             if (newClassInfo.ClassType == ClassType.Invalid)
             {
-                ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(type);
+                ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
             }
 
             // todo: check if type==newtype and skip below?

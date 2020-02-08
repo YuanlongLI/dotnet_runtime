@@ -20,8 +20,7 @@ namespace System.Text.Json.Serialization
             JsonConverter? valueConverter = options.GetConverter(valueTypeToConvert);
             if (valueConverter == null)
             {
-                // todo: add test for this
-                ThrowHelper.ThrowJsonException_DeserializeUnableToConvertValue(valueTypeToConvert);
+                ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(valueTypeToConvert);
             }
 
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(

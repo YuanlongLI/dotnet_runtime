@@ -33,10 +33,7 @@ namespace System.Text.Json.Serialization.Converters
         protected static JsonConverter<TValue> GetElementConverter(ref ReadStack state)
         {
             JsonConverter<TValue> converter = (JsonConverter<TValue>)state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase;
-            if (converter == null)
-            {
-                state.Current.JsonClassInfo.ElementClassInfo.PolicyProperty.ThrowCollectionNotSupportedException();
-            }
+            Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
 
             return converter;
         }
@@ -59,10 +56,7 @@ namespace System.Text.Json.Serialization.Converters
         protected static JsonConverter<TValue> GetValueConverter(ref WriteStack state)
         {
             JsonConverter<TValue> converter = (JsonConverter<TValue>)state.Current.DeclaredJsonPropertyInfo.ConverterBase;
-            if (converter == null)
-            {
-                state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ThrowCollectionNotSupportedException();
-            }
+            Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
 
             return converter;
         }

@@ -155,7 +155,7 @@ namespace System.Text.Json
                 }
             }
 
-            ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(type);
+            ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
             return null!;
         }
 
@@ -175,7 +175,7 @@ namespace System.Text.Json
                 }
             }
 
-            ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(type);
+            ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
             return null!;
         }
 

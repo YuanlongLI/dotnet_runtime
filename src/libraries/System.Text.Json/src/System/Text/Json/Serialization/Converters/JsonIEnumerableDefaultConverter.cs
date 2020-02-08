@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
+
 namespace System.Text.Json.Serialization.Converters
 {
     /// <summary>
@@ -16,10 +18,7 @@ namespace System.Text.Json.Serialization.Converters
         protected static JsonConverter<TElement> GetElementConverter(ref ReadStack state)
         {
             JsonConverter<TElement> converter = (JsonConverter<TElement>)state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase;
-            if (converter == null)
-            {
-                state.Current.JsonClassInfo.ElementClassInfo.PolicyProperty.ThrowCollectionNotSupportedException();
-            }
+            Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
 
             return converter;
         }
@@ -27,10 +26,7 @@ namespace System.Text.Json.Serialization.Converters
         protected static JsonConverter<TElement> GetElementConverter(ref WriteStack state)
         {
             JsonConverter<TElement> converter = (JsonConverter<TElement>)state.Current.DeclaredJsonPropertyInfo.ConverterBase;
-            if (converter == null)
-            {
-                state.Current.JsonClassInfo.ElementClassInfo!.PolicyProperty!.ThrowCollectionNotSupportedException();
-            }
+            Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
 
             return converter;
         }

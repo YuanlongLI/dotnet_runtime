@@ -214,7 +214,7 @@ namespace System.Text.Json
                     break;
                 case ClassType.Invalid:
                     {
-                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(type);
+                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
                     }
                     break;
                 default:
@@ -237,7 +237,7 @@ namespace System.Text.Json
                     JsonConverter? converter = Options.GetConverter(declaredPropertyType);
                     if (converter == null)
                     {
-                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupportedCollection(declaredPropertyType);
+                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(declaredPropertyType);
                     }
                 }
                 else
@@ -580,7 +580,7 @@ namespace System.Text.Json
                     }
                     else
                     {
-                        throw ThrowHelper.GetNotSupportedException_SerializationNotSupportedCollection(type, parentClassType, propertyInfo);
+                        throw ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type, parentClassType, propertyInfo);
                     }
                 }
             }
