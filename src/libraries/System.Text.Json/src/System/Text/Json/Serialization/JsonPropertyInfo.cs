@@ -215,6 +215,41 @@ namespace System.Text.Json
 
         public abstract bool ReadJsonAndSetMember(object obj, ref ReadStack state, ref Utf8JsonReader reader);
 
+        public bool ReadJsonExtensionDataValue(ref ReadStack state, ref Utf8JsonReader reader, out JsonElement value)
+        {
+            JsonConverter<JsonElement> converter = JsonSerializerOptions.GetJsonElementConverter();
+            if (!converter.TryRead(ref reader, typeof(JsonElement), Options, ref state, out JsonElement jsonElement))
+            {
+                // JsonElement is a struct that must be read in full.
+                value = default;
+                return false;
+            }
+
+            value = jsonElement;
+            return true;
+        }
+
+        public bool ReadJsonExtensionDataValue(ref ReadStack state, ref Utf8JsonReader reader, out object? value)
+        {
+            if (reader.TokenType == JsonTokenType.Null)
+            {
+                value = null;
+                return true;
+            }
+            JsonConverter<JsonElement> converter = JsonSerializerOptions.GetJsonElementConverter();
+            if (!converter.TryRead(ref reader, typeof(JsonElement), Options, ref state, out JsonElement jsonElement))
+            {
+                // JsonElement is a struct that must be read in full.
+                value = null;
+                return false;
+            }
+
+            value = jsonElement;
+            return true;
+        }
+
+        public abstract bool ReadJson(ref ReadStack state, ref Utf8JsonReader reader, out object? value);
+
         public Type ParentClassType { get; private set; } = null!;
 
         public PropertyInfo? PropertyInfo { get; private set; }

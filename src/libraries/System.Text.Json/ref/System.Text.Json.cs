@@ -453,7 +453,6 @@ namespace System.Text.Json
     {
         public JsonSerializerOptions() { }
         public bool AllowTrailingCommas { get { throw null; } set { } }
-        public bool ConstructorParameterNameCaseInsensitive { get { throw null; } set { } }
         public System.Collections.Generic.IList<System.Text.Json.Serialization.JsonConverter> Converters { get { throw null; } }
         public int DefaultBufferSize { get { throw null; } set { } }
         public System.Text.Json.JsonNamingPolicy? DictionaryKeyPolicy { get { throw null; } set { } }
@@ -467,7 +466,6 @@ namespace System.Text.Json
         public System.Text.Json.Serialization.ReferenceHandling ReferenceHandling { get { throw null; } set { } }
         public bool WriteIndented { get { throw null; } set { } }
         public System.Text.Json.Serialization.JsonConverter? GetConverter(System.Type typeToConvert) { throw null; }
-        public bool UseConstructorParameterDefaultValues { get { throw null; } set { } }
     }
     public sealed partial class JsonString : System.Text.Json.JsonNode, System.IEquatable<System.Text.Json.JsonString>
     {

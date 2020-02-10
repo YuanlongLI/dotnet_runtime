@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace System.Text.Json.Serialization.Tests
@@ -215,7 +216,8 @@ namespace System.Text.Json.Serialization.Tests
         [Fact]
         public static void ReadObjectFail_ReferenceTypeMissingParameterlessConstructor()
         {
-            Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<PublicParameterizedConstructorTestClass>(@"{""Name"":""Name!""}"));
+            var obj = JsonSerializer.Deserialize<PublicParameterizedConstructorTestClass>(@"{""Name"":""Name!""}");
+            Assert.Equal("Name!", obj.Name);
         }
 
         class PublicParameterizedConstructorTestClass

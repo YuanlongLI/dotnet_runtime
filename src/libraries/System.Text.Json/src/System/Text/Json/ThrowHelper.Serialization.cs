@@ -38,6 +38,13 @@ namespace System.Text.Json
             throw GetNotSupportedException_SerializationNotSupported(propertyType, parentType, memberInfo);
         }
 
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static NotSupportedException ThrowNotSupportedException_SerializationNotSupported(Type propertyType, Type parentType, ParameterInfo parameterInfo)
+        {
+            throw new NotSupportedException(SR.Format(SR.SerializationNotSupportedConstructorParameter, propertyType, $"{parentType}.{parameterInfo.Name}"));
+        }
+
         public static void ThrowInvalidOperationException_SerializerCycleDetected(int maxDepth)
         {
             throw new JsonException(SR.Format(SR.SerializerCycleDetected, maxDepth));
@@ -131,9 +138,9 @@ namespace System.Text.Json
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowInvalidOperationException_SerializerPropertyNameConflict(JsonClassInfo jsonClassInfo, JsonPropertyInfo jsonPropertyInfo)
+        public static void ThrowInvalidOperationException_SerializerPropertyNameConflict(Type type, JsonPropertyInfo jsonPropertyInfo)
         {
-            throw new InvalidOperationException(SR.Format(SR.SerializerPropertyNameConflict, jsonClassInfo.Type, jsonPropertyInfo.PropertyInfo?.Name));
+            throw new InvalidOperationException(SR.Format(SR.SerializerPropertyNameConflict, type, jsonPropertyInfo.PropertyInfo?.Name));
         }
 
         [DoesNotReturn]
@@ -141,6 +148,13 @@ namespace System.Text.Json
         public static void ThrowInvalidOperationException_SerializerPropertyNameNull(Type parentType, JsonPropertyInfo jsonPropertyInfo)
         {
             throw new InvalidOperationException(SR.Format(SR.SerializerPropertyNameNull, parentType, jsonPropertyInfo.PropertyInfo?.Name));
+        }
+
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ThrowInvalidOperationException_SerializerConstructorNameNull(Type parentType, JsonParameterInfo jsonParameterInfo)
+        {
+            throw new InvalidOperationException(SR.Format(SR.SerializerConstructorNameNull, parentType, jsonParameterInfo.ParameterInfo?.Name));
         }
 
         [DoesNotReturn]
@@ -266,9 +280,16 @@ namespace System.Text.Json
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowInvalidOperationException_SerializationDataExtensionPropertyInvalid(JsonClassInfo jsonClassInfo, JsonPropertyInfo jsonPropertyInfo)
+        public static void ThrowInvalidOperationException_SerializationDuplicateTypeAttribute<TAttribute>(Type classType)
         {
-            throw new InvalidOperationException(SR.Format(SR.SerializationDataExtensionPropertyInvalid, jsonClassInfo.Type, jsonPropertyInfo.PropertyInfo?.Name));
+            throw new InvalidOperationException(SR.Format(SR.SerializationDuplicateTypeAttribute, classType, typeof(Attribute)));
+        }
+
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ThrowInvalidOperationException_SerializationDataExtensionPropertyInvalid(Type type, JsonPropertyInfo jsonPropertyInfo)
+        {
+            throw new InvalidOperationException(SR.Format(SR.SerializationDataExtensionPropertyInvalid, type, jsonPropertyInfo.PropertyInfo?.Name));
         }
 
         [DoesNotReturn]

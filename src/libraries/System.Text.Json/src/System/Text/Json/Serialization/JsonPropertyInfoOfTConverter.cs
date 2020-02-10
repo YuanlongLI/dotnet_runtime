@@ -176,6 +176,33 @@ namespace System.Text.Json
             return success;
         }
 
+        public override bool ReadJson(ref ReadStack state, ref Utf8JsonReader reader, out object? value)
+        {
+            bool success;
+            bool isNullToken = reader.TokenType == JsonTokenType.Null;
+            if (isNullToken && !Converter.HandleNullValue && !state.IsContinuation)
+            {
+                value = default(TConverter)!;
+                success = true;
+            }
+            else
+            {
+                // Optimize for internal converters by avoiding the extra call to TryRead.
+                if (Converter.CanUseDirectReadOrWrite)
+                {
+                    value = Converter.Read(ref reader, RuntimePropertyType!, Options);
+                    return true;
+                }
+                else
+                {
+                    success = Converter.TryRead(ref reader, RuntimePropertyType!, Options, ref state, out TConverter typedValue);
+                    value = typedValue;
+                }
+            }
+
+            return success;
+        }
+
         public override void SetValueAsObject(object obj, object? value)
         {
             Debug.Assert(HasSetter);

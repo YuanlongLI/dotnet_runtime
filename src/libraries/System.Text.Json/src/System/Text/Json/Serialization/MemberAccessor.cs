@@ -11,6 +11,11 @@ namespace System.Text.Json
     {
         public abstract JsonClassInfo.ConstructorDelegate? CreateConstructor(Type classType);
 
+        public abstract JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert>? CreateParameterizedConstructor<TTypeToConvert>(ConstructorInfo constructor);
+
+        public abstract JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>?
+            CreateParameterizedConstructor<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(ConstructorInfo constructor);
+
         public abstract Action<TCollection, object> CreateAddMethodDelegate<TCollection>();
 
         public abstract Func<IEnumerable<TElement>, TCollection> CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>();
