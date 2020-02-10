@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>$(OutputPath)$(MSBuildProjectName).xml</DocumentationFile>
@@ -54,6 +54,7 @@
     <Compile Include="System\Text\Json\Reader\Utf8JsonReader.MultiSegment.cs" />
     <Compile Include="System\Text\Json\Reader\Utf8JsonReader.TryGet.cs" />
     <Compile Include="System\Text\Json\Serialization\ClassType.cs" />
+    <Compile Include="System\Text\Json\Serialization\ConstructorArguments.cs" />
     <Compile Include="System\Text\Json\Serialization\ConverterList.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\Collection\ArrayConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\Collection\ConcurrentQueueOfTConverter.cs" />
@@ -80,6 +81,8 @@
     <Compile Include="System\Text\Json\Serialization\Converters\Collection\StackOfTConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\Object\ObjectConverterFactory.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\Object\ObjectDefaultConverter.cs" />
+    <Compile Include="System\Text\Json\Serialization\Converters\ObjectWithParameterizedConstructorConverter.Large.cs" />
+    <Compile Include="System\Text\Json\Serialization\Converters\ObjectWithParameterizedConstructorConverter.Small.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\Value\BooleanConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\Value\ByteArrayConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\Value\ByteConverter.cs" />
@@ -126,6 +129,8 @@
     <Compile Include="System\Text\Json\Serialization\JsonIgnoreAttribute.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonNamingPolicy.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonObjectConverter.cs" />
+    <Compile Include="System\Text\Json\Serialization\JsonParameterInfo.cs" />
+    <Compile Include="System\Text\Json\Serialization\JsonParameterInfoOfTTypeToConvert.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonPropertyInfo.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonPropertyInfoOfTTypeToConvert.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonPropertyNameAttribute.cs" />
@@ -152,6 +157,7 @@
     <Compile Include="System\Text\Json\Serialization\MemberAccessor.cs" />
     <Compile Include="System\Text\Json\Serialization\MetadataPropertyName.cs" />
     <Compile Include="System\Text\Json\Serialization\PooledByteBufferWriter.cs" />
+    <Compile Include="System\Text\Json\Serialization\ParameterRef.cs" />
     <Compile Include="System\Text\Json\Serialization\PropertyRef.cs" />
     <Compile Include="System\Text\Json\Serialization\ReadStack.cs" />
     <Compile Include="System\Text\Json\Serialization\ReadStackFrame.cs" />

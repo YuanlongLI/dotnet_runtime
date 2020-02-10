@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -37,6 +38,37 @@ namespace System.Text.Json
 
         // Add method delegate for Non-generic Stack and Queue; and types that derive from them.
         public object? AddMethodDelegate;
+
+        public JsonParameterInfo? JsonConstructorParameterInfo;
+
+        public int ConstructorParameterIndex;
+        public List<ParameterRef>? ParameterRefCache;
+
+        // Whether or not we have seen the JSON for a constructor parameter.
+        public bool[]? ConstructorArgumentState;
+
+        // Cache for parsed constructor arguments that avoids boxing the arguments.
+        // Used when there are at most 7 constructor parameters.
+        public object? ConstructorArguments;
+
+        // Cache for parsed constructor arguments that boxes the arguments.
+        // Used when there are more than 7 constructor parameters.
+        public object[]? ConstructorArgumentsArray;
+
+        // The position of the first object property.
+        // We resume from the property on the second pass.
+        public int FirstPropertyIndex;
+
+        // The kind of properties we found in the JSON.
+        // 0 = constructor parameter.
+        // PropertyNameKey = object property.
+        public bool[]? JsonPropertyKindIndicator;
+
+        public void EndConstructorParameter()
+        {
+            JsonConstructorParameterInfo = null;
+            JsonPropertyName = null;
+        }
 
         public void EndProperty()
         {
@@ -87,14 +119,22 @@ namespace System.Text.Json
         public void Reset()
         {
             AddMethodDelegate = null;
+            ConstructorParameterIndex = 0;
+            ConstructorArguments = null;
+            ConstructorArgumentsArray = null;
+            ConstructorArgumentState = null;
+            FirstPropertyIndex = 0;
             JsonClassInfo = null!;
+            JsonPropertyKindIndicator = null;
             ObjectState = StackFrameObjectState.None;
             OriginalDepth = 0;
             OriginalTokenType = JsonTokenType.None;
+            ParameterRefCache = null;
             PropertyIndex = 0;
             PropertyRefCache = null;
             ReturnValue = null;
 
+            EndConstructorParameter();
             EndProperty();
         }
     }
