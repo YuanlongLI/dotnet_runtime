@@ -485,4 +485,7 @@
   <data name="MetadataInvalidPropertyWithLeadingDollarSign" xml:space="preserve">
     <value>Properties that start with '$' are not allowed on preserve mode, either escape the character or turn off preserve references by setting ReferenceHandling to ReferenceHandling.Default.</value>
   </data>
+  <data name="SerializerConstructorNameNull" xml:space="preserve">
+    <value>The JSON constructor name for '{0}.{1}' cannot be null.</value>
+  </data>
 </root>

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Linq;
 
 namespace System.Text.Json
 {
@@ -53,6 +54,53 @@ namespace System.Text.Json
             generator.Emit(OpCodes.Ret);
 
             return (JsonClassInfo.ConstructorDelegate)dynamicMethod.CreateDelegate(typeof(JsonClassInfo.ConstructorDelegate));
+        }
+
+        public override JsonClassInfo.ParameterizedConstructorDelegate<T>? CreateParameterizedConstructor<T>(ConstructorInfo constructor)
+        {
+            Type type = typeof(T);
+            Debug.Assert(!type.IsAbstract);
+            Debug.Assert(type.GetConstructors().Contains(constructor));
+
+            ParameterInfo[] parameters = constructor.GetParameters();
+            int parameterCount = parameters.Length;
+
+            if (parameterCount > 64)
+            {
+                return null;
+            }
+
+            var dynamicMethod = new DynamicMethod(
+                ConstructorInfo.ConstructorName,
+                type,
+                new[] { typeof(object[]) },
+                typeof(ReflectionEmitMemberAccessor).Module,
+                skipVisibility: true);
+
+            ILGenerator generator = dynamicMethod.GetILGenerator();
+
+            for (int i = 0; i < parameterCount; i++)
+            {
+                Type paramType = parameters[i].ParameterType;
+
+                generator.Emit(OpCodes.Ldarg_0);
+                generator.Emit(OpCodes.Ldc_I4_S, i);
+                generator.Emit(OpCodes.Ldelem_Ref);
+
+                if (paramType.IsValueType)
+                {
+                    generator.Emit(OpCodes.Unbox_Any, paramType);
+                }
+                else
+                {
+                    generator.Emit(OpCodes.Castclass, paramType);
+                };
+            }
+
+            generator.Emit(OpCodes.Newobj, constructor);
+            generator.Emit(OpCodes.Ret);
+
+            return (JsonClassInfo.ParameterizedConstructorDelegate<T>)dynamicMethod.CreateDelegate(typeof(JsonClassInfo.ParameterizedConstructorDelegate<T>));
         }
 
         public override Action<TCollection, object> CreateAddMethodDelegate<TCollection>()

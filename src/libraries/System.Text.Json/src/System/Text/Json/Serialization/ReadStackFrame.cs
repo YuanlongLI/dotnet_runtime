@@ -38,6 +38,71 @@ namespace System.Text.Json
         // Add method delegate for Non-generic Stack and Queue; and types that derive from them.
         public object? AddMethodDelegate;
 
+        // Cached values for objects created with parameterized constructors
+        public JsonParameterInfo? JsonConstructorParameterInfo;
+
+        public int ConstructorParameterIndex;
+        public List<ParameterRef>? ParameterRefCache;
+
+        public object[]? ConstructorArguments;
+        public Dictionary<JsonPropertyInfo, object?>? PropertyValues;
+
+        public bool ExtensionDataIsObject;
+        public IDictionary<string, object>? ObjectExtensionData;
+        public IDictionary<string, JsonElement>? JsonElementExtensionData;
+
+        public void InitializeObjectWithParameterizedConstructor(
+            ref ReadStackFrame frame,
+            Dictionary<string, JsonParameterInfo> parameterCache,
+            int parameterCount,
+            int propertyCount)
+        {
+            // Initialize temporary property value cache.
+            PropertyValues = new Dictionary<JsonPropertyInfo, object?>(propertyCount);
+
+            // Initialize temporary extension data cache.
+            InitializeExtensionDataCache(ref frame);
+
+            // Initialize temporary constructor argument cache.
+            ConstructorArguments = new object[parameterCount];
+            foreach (JsonParameterInfo parameterInfo in parameterCache.Values)
+            {
+                ConstructorArguments[parameterInfo.Position] = parameterInfo.DefaultValue!;
+            }
+        }
+
+        private void InitializeExtensionDataCache(ref ReadStackFrame frame)
+        {
+            JsonPropertyInfo? extensionDataProperty = frame.JsonClassInfo.DataExtensionProperty;
+            if (extensionDataProperty != null)
+            {
+                Type underlyingIDictionaryType = extensionDataProperty.DeclaredPropertyType.GetCompatibleGenericInterface(typeof(IDictionary<,>))!;
+                Debug.Assert(underlyingIDictionaryType.IsGenericType);
+                Debug.Assert(underlyingIDictionaryType.GetGenericArguments().Length == 2);
+                Debug.Assert(underlyingIDictionaryType.GetGenericArguments()[0].UnderlyingSystemType == typeof(string));
+                Debug.Assert(
+                    underlyingIDictionaryType.GetGenericArguments()[1].UnderlyingSystemType == typeof(object) ||
+                    underlyingIDictionaryType.GetGenericArguments()[1].UnderlyingSystemType == typeof(JsonElement));
+
+                JsonClassInfo.ConstructorDelegate createObject = extensionDataProperty.RuntimeClassInfo.CreateObject!;
+
+                if (underlyingIDictionaryType.GetGenericArguments()[1] == typeof(object))
+                {
+                    ExtensionDataIsObject = true;
+                    ObjectExtensionData = (IDictionary<string, object>)createObject()!;
+                }
+                else
+                {
+                    JsonElementExtensionData = (IDictionary<string, JsonElement>)createObject()!;
+                }
+            }
+        }
+
+        public void EndConstructorParameter()
+        {
+            JsonConstructorParameterInfo = null;
+        }
+
         public void EndProperty()
         {
             JsonPropertyInfo = null!;
@@ -87,6 +152,7 @@ namespace System.Text.Json
         public void Reset()
         {
             AddMethodDelegate = null;
+            ConstructorParameterIndex = 0;
             JsonClassInfo = null!;
             ObjectState = StackFrameObjectState.None;
             OriginalDepth = 0;

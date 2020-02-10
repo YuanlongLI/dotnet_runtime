@@ -8,7 +8,7 @@ namespace System.Text.Json.Serialization
     /// Base class for non-enumerable, non-primitive objects where public properties
     /// are (de)serialized as a JSON object.
     /// </summary>
-    internal abstract class JsonObjectConverter<T> : JsonResumableConverter<T>
+    internal class JsonObjectConverter<T> : JsonResumableConverter<T>
     {
         internal override ClassType ClassType => ClassType.Object;
         internal override sealed Type? ElementType => null;

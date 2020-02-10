@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -27,6 +26,9 @@ namespace System.Text.Json
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
         public volatile Dictionary<string, JsonPropertyInfo>? PropertyCache;
 
+        // The number of serializable properties on a POCO (except the optionla extension property).
+        public int PropertyCount { get; private set; }
+
         // All of the serializable properties on a POCO including the optional extension property.
         // Used for performance during serialization instead of 'PropertyCache' above.
         public volatile JsonPropertyInfo[]? PropertyCacheArray;
@@ -36,10 +38,10 @@ namespace System.Text.Json
         private volatile PropertyRef[]? _propertyRefsSorted;
 
         public delegate object? ConstructorDelegate();
-        public ConstructorDelegate? CreateObject { get; private set; }
 
-        public delegate TCollection ConstructorDelegate<TCollection>(ICollection elements);
-        public delegate TCollection ConstructorDelegate<TCollection, TElement>(IEnumerable<TElement> elements);
+        public delegate T ParameterizedConstructorDelegate<T>(object[] arguments);
+
+        public ConstructorDelegate? CreateObject { get; private set; }
 
         public ClassType ClassType { get; private set; }
 
@@ -132,11 +134,15 @@ namespace System.Text.Json
             {
                 case ClassType.Object:
                     {
-                        CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
+                        if (converter != null && !converter.ConstructorIsParameterized)
+                        {
+                            CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
+                        }
 
                         PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-                        Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Length);
+                        PropertyCount = properties.Length;
+                        Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(PropertyCount);
 
                         foreach (PropertyInfo propertyInfo in properties)
                         {
@@ -278,7 +284,7 @@ namespace System.Text.Json
 
         // AggressiveInlining used although a large method it is only called from one location and is on a hot path.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public JsonPropertyInfo GetProperty(ReadOnlySpan<byte> propertyName, ref ReadStackFrame frame)
+        public JsonPropertyInfo GetProperty(ref ReadStackFrame frame, ReadOnlySpan<byte> propertyName, string? stringPropertyName = null)
         {
             JsonPropertyInfo? info = null;
 
@@ -340,7 +346,10 @@ namespace System.Text.Json
 
             // No cached item was found. Try the main list which has all of the properties.
 
-            string stringPropertyName = JsonHelpers.Utf8GetString(propertyName);
+            if (stringPropertyName == null)
+            {
+                stringPropertyName = JsonHelpers.Utf8GetString(propertyName);
+            }
 
             Debug.Assert(PropertyCache != null);
 

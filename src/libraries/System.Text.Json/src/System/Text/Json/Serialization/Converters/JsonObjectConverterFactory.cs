@@ -5,6 +5,7 @@
 using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -21,16 +22,66 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonObjectDefaultConverter`1")]
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonObjectWithParameterizedConstructorConverter`1")]
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
+            ConstructorInfo? constructor = GetDeserializationConstructor(typeToConvert);
+
+            Type genericType;
+            object[]? arguments = null;
+
+            if (constructor == null || typeToConvert.IsAbstract || constructor.GetParameters().Length == 0)
+            {
+                genericType = typeof(JsonObjectDefaultConverter<>);
+            }
+            else
+            {
+                genericType = typeof(JsonObjectWithParameterizedConstructorConverter<>);
+                arguments = new object[] { constructor, options };
+            }
+
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeof(JsonObjectDefaultConverter<>).MakeGenericType(typeToConvert),
+                genericType.MakeGenericType(typeToConvert),
                 BindingFlags.Instance | BindingFlags.Public,
                 binder: null,
-                args: null,
+                arguments,
                 culture: null)!;
 
             return converter;
+        }
+
+        private ConstructorInfo? GetDeserializationConstructor(Type type)
+        {
+            ConstructorInfo[] constructors = type.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+
+            if (constructors.Length == 1)
+            {
+                return constructors[0];
+            }
+
+            ConstructorInfo? parameterlessCtor = null;
+            ConstructorInfo? ctorWithAttribute = null;
+
+            foreach (ConstructorInfo constructor in constructors)
+            {
+                if (constructor.GetCustomAttribute<JsonConstructorAttribute>() != null)
+                {
+                    if (ctorWithAttribute != null)
+                    {
+                        ThrowHelper.ThrowInvalidOperationException_SerializationDuplicateTypeAttribute<JsonConstructorAttribute>(type);
+                    }
+
+                    ctorWithAttribute = constructor;
+                }
+                else if (parameterlessCtor == null && constructor.GetParameters().Length == 0)
+                {
+
+                    parameterlessCtor = constructor;
+                }
+            }
+
+            return ctorWithAttribute ?? parameterlessCtor;
         }
     }
 }

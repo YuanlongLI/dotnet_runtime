@@ -2144,7 +2144,7 @@ namespace System.Text.Json.Serialization.Tests
         [Fact]
         public static void DictionaryWith_ObjectWithNoParameterlessCtor_AsValue_Throws()
         {
-            Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<Dictionary<string, ClassWithoutParameterlessCtor>>(@"{""key"":{}}"));
+            Assert.NotNull(JsonSerializer.Deserialize<Dictionary<string, ClassWithoutParameterlessCtor>>(@"{""key"":{}}"));
         }
     }
 }

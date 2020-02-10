@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Linq;
 
 namespace System.Text.Json
 {
@@ -26,6 +27,17 @@ namespace System.Text.Json
             }
 
             return () => Activator.CreateInstance(type, nonPublic: false);
+        }
+
+        public override JsonClassInfo.ParameterizedConstructorDelegate<T>? CreateParameterizedConstructor<T>(ConstructorInfo constructor)
+        {
+            Type type = typeof(T);
+            Debug.Assert(!type.IsAbstract);
+            Debug.Assert(type.GetConstructors().Contains(constructor));
+
+            // This call will only invoke the desired public constructor, as the arguments below will match the method signature exactly.
+            // We verfied the constructor exists and is public during the selection of the calling converter.
+            return (arguments) => (T)Activator.CreateInstance(type, arguments)!;
         }
 
         public override Action<TCollection, object> CreateAddMethodDelegate<TCollection>()

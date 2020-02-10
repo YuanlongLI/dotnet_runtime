@@ -99,9 +99,22 @@ namespace System.Text.Json
                 else
                 {
                     JsonClassInfo jsonClassInfo;
-                    if ((Current.JsonClassInfo.ClassType & (ClassType.Object | ClassType.Value | ClassType.NewValue)) != 0)
+                    if (Current.JsonClassInfo.ClassType == ClassType.Object)
+                    {
+                        if (Current.JsonPropertyInfo != null)
+                        {
+                            jsonClassInfo = Current.JsonPropertyInfo.RuntimeClassInfo;
+                        }
+                        else
+                        {
+                            Debug.Assert(Current.JsonConstructorParameterInfo != null);
+                            jsonClassInfo = Current.JsonConstructorParameterInfo.RuntimeClassInfo;
+                        }
+                    }
+                    else if ((Current.JsonClassInfo.ClassType & (ClassType.Value | ClassType.NewValue)) != 0)
                     {
                         // Although ClassType.Value doesn't push, a custom custom converter may re-enter serialization.
+                        Debug.Assert(Current.JsonPropertyInfo != null);
                         jsonClassInfo = Current.JsonPropertyInfo.RuntimeClassInfo;
                     }
                     else

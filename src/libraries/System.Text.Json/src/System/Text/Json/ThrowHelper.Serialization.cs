@@ -145,6 +145,13 @@ namespace System.Text.Json
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ThrowInvalidOperationException_SerializerConstructorNameNull(Type parentType, JsonParameterInfo jsonParameterInfo)
+        {
+            throw new InvalidOperationException(SR.Format(SR.SerializerConstructorNameNull, parentType, jsonParameterInfo.ParameterInfo?.Name));
+        }
+
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidOperationException_SerializerDictionaryKeyNull(Type policyType)
         {
             throw new InvalidOperationException(SR.Format(SR.SerializerDictionaryKeyNull, policyType));
@@ -262,6 +269,13 @@ namespace System.Text.Json
         public static void ThrowInvalidOperationException_SerializationDuplicateTypeAttribute(Type classType, Type attribute)
         {
             throw new InvalidOperationException(SR.Format(SR.SerializationDuplicateTypeAttribute, classType, attribute));
+        }
+
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ThrowInvalidOperationException_SerializationDuplicateTypeAttribute<TAttribute>(Type classType)
+        {
+            throw new InvalidOperationException(SR.Format(SR.SerializationDuplicateTypeAttribute, classType, typeof(Attribute)));
         }
 
         [DoesNotReturn]

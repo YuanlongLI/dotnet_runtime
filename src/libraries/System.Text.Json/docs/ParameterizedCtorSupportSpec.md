@@ -18,8 +18,6 @@ public struct Point
     public int Y { get; }
 
     public Point(int x, int y) => (X, Y) = (x, y);
-
-    public void Deconstruct(out int x, out int y) => (x, y) = (X, Y);
 }
 ```
 
@@ -63,24 +61,6 @@ https://github.com/dotnet/runtime/issues/29743.
 ## Proposal
 
 ```C#
-namespace System.Text.Json
-{
-    public sealed partial class JsonSerializerOptions
-    {
-        /// <summary>
-        /// Determines whether constructor parameter names use a case-insensitive comparison during deserialization.
-        /// The default value is false.
-        /// </summary>
-        public bool ConstructorParameterNameCaseInsensitive { get; set; }
-
-        /// <summary>
-        /// Determines whether to use a default value when no JSON property maps to a constructor parameter.
-        /// The default value is false.
-        /// </summary>
-        public bool UseConstructorParameterDefaultValues { get; set; }
-    }
-}
-
 namespace System.Text.Json.Serialization
 {
     /// <summary>
@@ -149,19 +129,78 @@ creation methods can be considered in the future, but a new attribute will proba
 
 ## Rules
 
+### options.IgnoreNullValues applies to parameter deserialization
+
+This is helpful to avoid `JsonException` when null is applied to value types.
+
+```C#
+using System;
+using Newtonsoft.Json;
+					
+public class Program
+{
+	public static void Main()
+	{
+		var settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+		JsonConvert.DeserializeObject<NullArgTester>(@"{""Point3DStruct"":null}");
+	}
+	
+	public class NullArgTester
+	{
+		public Point_3D_Struct Point3DStruct { get; set; }
+
+		public NullArgTester(Point_3D_Struct point3DStruct) {}
+	}
+	
+	public struct Point_3D_Struct
+	{
+		public int X { get; }
+
+		public int Y { get; }
+
+		public int Z { get; }
+	}
+}
+```
+
+`Newtonsoft.Json` fails with equivalent error:
+
+```
+Unhandled exception. Newtonsoft.Json.JsonSerializationException: Error converting value {null} to type 'Program+Point_3D_Struct'. Path 'Point3DStruct', line 1, position 21.
+```
+
+### Parameter name matching is case-insensitive by default.
+
+- People serialize readonly properties, might be serialized as PascalCase. Constructor arguments usual written as camel case. Case insensitive makes sense by default.
+- Allows us to support deserializing built-in types like Tuple
+
+Open question:
+
+- Is the reasoning for this worth the potential perf hit? i.e, should it be case sensitive by default
+- If we stick to case-insensitive, should we provide an option for people to change it to case-sensitive comparison?
+
+
+### If no JSON maps to a constructor parameter, then default values are used.
+
+This is consistent with Newtonsoft.Json, and is more performant than trying to check if a constructor argument was provided.
+
 ### Non-public constructors cannot be used for deserialization
 
-### Specified constructors cannot have more than 260 parameters
+### Specified constructors cannot have more than 64 parameters
 
 The invocation of specified
 
 `ldarg.0`, `ladarg.1`, `ladarg.2`, `ladarg.3` allow us to load first four arguments unto the stack.
 `ldarg.s` allows us to load another 256. The implementation will be limited to this sum number.
 
+### If there's no matching JSON for a constructor argument, the default value is used
 
-### Only one `[JsonConstructor]` can be specified
+- default value on parameter
+- CLR default value
 
-### The serializer will not guess which constructor to use
+### Attribute presence
+
+#### The serializer will not guess which constructor to use
 
 `NotSupportedException` will be thrown in ambiguous situations.
 
@@ -170,7 +209,13 @@ If no `[JsonConstructor]` is specified, the public parameterless constructor wil
 If no `[JsonConstructor]` is specified and there's no public parameterless constructor, but exactly
 one public parameterized constructor, the singular parameterized will be used for deserialization.
 
-### Users must indicate whether to use default values when there's JSON to match a parameter
+#### Only one public `[JsonConstructor]` can be specified
+
+#### If a single parameterized ctor. is present on a struct, that constructor will be used
+
+Allows support for KVP, BigInteger, ValueTuple and others
+
+#### If a single public parameterized ctor is present, and no public parameterless ct
 
 
 ### Members are never set with JSON properties that match constructor parameters
@@ -182,6 +227,10 @@ Doing this can override modifications done in constructor.
 Draft no
 
 ### What happens when trying to set null to non-nullable parameter
+
+### Duplicate constructor name
+
+Last one wins
 
 ## Interaction with other features
 

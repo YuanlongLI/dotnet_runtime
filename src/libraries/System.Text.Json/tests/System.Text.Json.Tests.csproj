@@ -36,7 +36,9 @@
     <Compile Include="Serialization\CacheTests.cs" />
     <Compile Include="Serialization\CamelCaseUnitTests.cs" />
     <Compile Include="Serialization\ConstructorTests.AttributePresence.cs" />
+    <Compile Include="Serialization\ConstructorTests.Cache.cs" />
     <Compile Include="Serialization\ConstructorTests.ParameterMatching.cs" />
+    <Compile Include="Serialization\ConstructorTests.Stream.cs" />
     <Compile Include="Serialization\CustomConverterTests.Array.cs" />
     <Compile Include="Serialization\CustomConverterTests.Attribute.cs" />
     <Compile Include="Serialization\CustomConverterTests.BadConverters.cs" />
