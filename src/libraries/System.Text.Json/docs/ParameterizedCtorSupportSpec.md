@@ -472,8 +472,8 @@ Console.WriteLine(person.Point.X); 1
 Console.WriteLine(person.Point.Y); 2
 ```
 
-Another option is to throw, but this behavior would be unecessarily prohibitive for users, and would give the serializer
-more work to do to determine which parameters had no JSON.
+Another option is to throw, but this behavior would be unecessarily prohibitive for users, and the serializer
+would have to allocate more memory to determine which parameters had no JSON.
 
 ### `options.IgnoreNullValues` is honored when deserializing constructor arguments
 
