@@ -46,19 +46,17 @@ public class User
 ```
 
 Although there is work scheduled to support deserializing JSON directly into properties with private setters
-(https://github.com/dotnet/runtime/issues/29743), providing parameterized constructor as an option increases
-the scope of support for customers with various design needs.
+(https://github.com/dotnet/runtime/issues/29743), providing parameterized constructor support as an option
+increases the scope of support for customers with various design needs.
 
 Deserializing with parameterized constructors also gives the opportunity to do JSON "argument" validation once on
 the creation of the instance.
 
-This feature also enables deserialization support for `ValueTuple<...>` types.
+This feature also enables deserialization support for `Tuple<...>` instances.
 
-<!-- Add notes about roundtrippability and scenarios around deserialization. -->
-Typical scenarios are readonly, so serialization should work fine in most cases. Private setters might be supported in
-https://github.com/dotnet/runtime/issues/29743.
+This feature does not affect serialization.
 
-## Proposal
+## New API Proposal
 
 ```C#
 namespace System.Text.Json.Serialization
@@ -76,27 +74,70 @@ namespace System.Text.Json.Serialization
 }
 ```
 
-#### More details
+### Example usage
 
-##### What about specifying naming policy or `ConstructorParameterNameAttribute` for constructor parameters?
+Given an immutable class `Point`,
 
-Newtonsoft.Json doesn't have option for this, and there's no signal of any desire for it. This can be added in the future.
+```C#
+public class Point
+{
+    public int X { get; }
 
-https://stackoverflow.com/questions/43032552/json-net-jsonconstructor-constructor-parameter-names
+    public int Y { get; }
 
-##### Rule out serialization with deconstructors.
+    public Point() {}
 
-We could soon have support for serializing properties with private getters: https://github.com/dotnet/runtime/issues/29743.
-Not clear why someone would want to serialize this.
+    [JsonConstructor]
+    public Point(int x, int y) => (X, Y) = (x, y);
+}
+```
+
+We can deserialize JSON into an instance of `Point` using `JsonSerializer`:
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
+Console.WriteLine(point.X); // 1
+Console.WriteLine(point.Y); // 2
+```
 
 
-## Examples
+## Solutions by other libraries
 
-## Compatibility with `Newtonsoft.Json`
+### `Newtonsoft.Json` (.NET)
 
-## Other solutions (outside BCL)
+`Newtonsoft.Json` provides a `[JsonConstructor]` attribute that allows users to specify which constructor to use.
+The attribute can be applied to only one constructor, which may be non-public. This proposal only allows public constructors,
+but can easily be extended if there is credible demand for it.
 
-### `Utf8Json` & `Jil` (.NET)
+`Newtonsoft.Json` also provides a globally applied
+[`ConstructorHandling`](https://www.newtonsoft.com/json/help/html/T_Newtonsoft_Json_ConstructorHandling.htm) which controls
+which constructor is used if none is specified with the attribute. The options are
+
+`Default`: First attempt to use the public default constructor, then fall back to a single parameterized constructor,
+then to the non-public default constructor.
+
+`AllowNonPublicDefaultConstructor`: Newtonsoft.NET will use a non-public default constructor before falling back to a
+parameterized constructor.
+
+These options don't map well to how `JsonSerializer` should behave. Non-public support will not be provided by
+default, so configuring selection precedence involving non-public constructors is not applicable.
+
+
+### `Utf8Json`
+
+`Utf8Json` chooses the constructor with the most matched arguments by name (not case-sensitive). Such best-fit matching
+allows for a situation where the size of the JSON payload and shape of the target type dictates how much work the serializer
+does. Also, it may have a non-trivial performance impact, and may not always choose the constructor that the user wishes
+to be used.
+
+The constructor to use can also be specified with a `[SerializationConstructor]` attribute.
+
+`Utf8Json` does not support non-public constructors, even with the attribute. 
+
+### `Jil` (.NET)
+
+`Jil` only supports deserialization using a parameterless constructor (may be non-public), and doesn't provide options
+to configure the behavior.
 
 ### `Jackson` (Java)
 
@@ -115,116 +156,363 @@ public BeanWithCreator(
 }
 ```
 
-<!-- Add note about @JsonProperty annotation -->
-
-<!-- Add note about @JacksonInject annotation -->
+As shown, a `@JsonProperty` annotation can be placed on a parameter to indicate the JSON name. Extending the `JsonProperty`
+attribute to be placed on constructor parameters was considered, but `Newtonsoft.Json` does not support this, which
+suggests that there's not a big customer need for this behavior.
 
 In addition to constructors, the `JsonCreator` can be applied to factory creator methods. There
 hasn't been any demand for this from our customers. Support for object deserialization with factory
-creation methods can be considered in the future, but a new attribute will probably need to be added.
-
-### Go
-
-### Scala
+creation methods can be considered in the future.
 
 ## Rules
 
-### options.IgnoreNullValues applies to parameter deserialization
+### Non-`public` constructors
 
-This is helpful to avoid `JsonException` when null is applied to value types.
+Only `public` constructors are allowed, even when using the `[JsonConstructor]` attribute. The serializer only honors
+the attribute when placed on public constructors.
+
+Given `Point`,
 
 ```C#
-using System;
-using Newtonsoft.Json;
-					
-public class Program
+public class Point
 {
-	public static void Main()
-	{
-		var settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-		JsonConvert.DeserializeObject<NullArgTester>(@"{""Point3DStruct"":null}");
-	}
-	
-	public class NullArgTester
-	{
-		public Point_3D_Struct Point3DStruct { get; set; }
+    public int X { get; }
 
-		public NullArgTester(Point_3D_Struct point3DStruct) {}
-	}
-	
-	public struct Point_3D_Struct
-	{
-		public int X { get; }
+    public int Y { get; }
 
-		public int Y { get; }
-
-		public int Z { get; }
-	}
+    [JsonConstructor]
+    private Point() {};
 }
 ```
 
-`Newtonsoft.Json` fails with equivalent error:
+The class is not supported for deserialization because there's no `public` constructor to use:
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>("{}"); // Throws `NotSupportedException.`
+```
+
+Given `Point`,
+
+```C#
+public class Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    public Point() {}
+
+    [JsonConstructor]
+    private Point(int x, int y) => (X, Y) = (x, y);
+}
+```
+
+The public parameterless constructor is used, as non-public constructors are not supported:
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
+Console.WriteLine(point.X); // 0
+Console.WriteLine(point.Y); // 0
+```
+
+To support non-`public` constructors in the future, we would likely have to add to add a global option enabling support,
+so we don't cause breaking changes e.g. throwing execptions due to having duplicate `[JsonConstructor]` attributes placed
+which were previously ignored.
+
+### Attribute presence
+
+#### Without `[JsonConstructor]`
+
+##### A public parameterless constructor will always be used if present
+
+Given `Point`,
+
+```C#
+public class Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    public Point() {}
+
+    public Point(int x, int y) => (X, Y) = (x, y);
+}
+```
+
+The public parameterless constructor is used.
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
+Console.WriteLine(point.X); // 0
+Console.WriteLine(point.Y); // 0
+```
+
+##### For `struct`s, a single parameterized constructor will be used over the default constructor
+
+This is because `struct`s always have default constructors, and there's no way for a user to remove it.
+
+Given `Point`,
+
+```C#
+public struct Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    public Point(int x, int y) => (X, Y) = (x, y);
+}
+```
+
+A not supported.
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
+Console.WriteLine(point.X); // 1
+Console.WriteLine(point.Y); // 2
+```
+
+Aside from this caveat, the behavior for `class`es and `struct`s are exactly the same.
+
+##### A single parameterized constructor will always be used if there's no public parameterless constructor
+
+Given `Point`,
+
+```C#
+public class Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    public Point(int x, int y) => (X, Y) = (x, y);
+}
+```
+
+The singular parameterized constructor is used.
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
+Console.WriteLine(point.X); // 1
+Console.WriteLine(point.Y); // 2
+```
+
+Given another definition for `Point`,
+
+```C#
+public class Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    public int Z { get; }
+
+    public Point(int x, int y) => (X, Y) = (x, y);
+
+    public Point(int x, int y, int z = 3) => (X, Y, Z) = (x, y, z);
+}
+```
+
+A `NotSupportedException` is thrown because it is not clear which constructor to use. This may be resolved by using
+the `[JsonConstructor]`
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2,""z"":3}");
+Console.WriteLine(point.X); // 1
+Console.WriteLine(point.Y); // 2
+```
+
+#### Using [JsonConstructor]
+
+##### `[JsonConstructor]` can only be used on one public parameterless constructor
+
+Given `Point`,
+
+```C#
+public class Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    public int Z { get; }
+
+    [JsonConstructor]
+    public Point() {}
+
+    public Point(int x, int y) => (X, Y) = (x, y);
+
+    [JsonConstructor]
+    public Point(int x, int y, int z = 3) => (X, Y, Z) = (x, y, z);
+}
+```
+
+An `InvalidOperationException` is thrown:
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2,""z"":3}"); // Throws `InvalidOperationException`
+```
+
+### Parameter name matching
+
+#### Parameter name matching is case insensitive
+
+People serialize readonly properties, might be serialized as PascalCase (if default settings).
+Constructor arguments are usually written as camel case.
+
+Given class `Point`:
+
+```C#
+public class Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    public Point(int x, int y) => (X, Y) = (x, y);
+}
+```
+
+The following deserialization scenarios will work:
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""X"":1,""Y"":2}");
+Console.WriteLine(point.X);
+Console.WriteLine(point.Y);
+
+point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
+Console.WriteLine(point.X);
+Console.WriteLine(point.Y);
+
+...
+```
+
+Using case-insensitive matching allows the deserialization of
+[`Tuple`](https://docs.microsoft.com/dotnet/api/system.tuple-1.-ctor?view=netcore-3.1#System_Tuple_1__ctor__0_),
+instances where the `itemN` constructor arguments are camel case, but the `ItemN` properties are pascal case.
+Using case-sensitive matching would force users to configure options (set to case-insensitive) just to deserialize built-in types.
+
+`Newtonsoft.Json` uses case-insensitive parameter comparison.
+
+Open questions:
+
+- Is the reasoning for this worth the potential perf hit? i.e, should it be case sensitive by default
+  - There are usually not a lot of constructor parameters, so the number of parameter comparisons should be small.
+  - If we choose case-sensitive matching by default, we'll have to provide an option for people to change it.
+
+#### Parameter matching uses `PropertyNamingPolicy`
+
+A major scenario enabled by the feature is the round-trippability of "immutable" types that have read-only properties.
+
+For example, given `Point`:
+
+```C#
+public class Point
+{
+    public int XValue { get; }
+
+    public int YValue { get; }
+
+    public Point(int xValue, int yValue) => (XValue, YValue) = (xValue, yValue);
+}
+```
+
+Serializing a new instance of `Point` using a `SnakeCase` policy would yield something like the following:
+
+```C#
+string serialized = JsonSerializer.Serialize(new Point(1, 2));
+Console.WriteLine(serialized); // {"x_value":1,"y_value":2}
+```
+
+If constructor parameter matching doesn't honor `PropertyNamingPolicy`, there won't be any matches on deserialization
+when it is used.
+
+Another option is to provide a separate option to specify a `JsonNamingPolicy` for constructor parameters.
+This would cause friction for users as the general intention would be for the constructor parameters to use the
+`PropertyNamingPolicy`. Also, the policy for constructor parameters and properties would almost always be the same.
+
+### options.IgnoreNullValues is honored when deserializing constructor arguments
+
+This is helpful to avoid `JsonException` when null is applied to value types.
+
+Given `PointWrapper` and `Point_3D`:
+
+```C#
+public class PointWrapper
+{
+	public Point_3D Point { get; }
+
+	public PointWrapper(Point_3D point) {}
+}
+	
+public struct Point_3D
+{
+	public int X { get; }
+
+	public int Y { get; }
+
+	public int Z { get; }
+}
+```
+
+We can ignore `null` and not pass it as an argument to a non-nullable parameter. Default behavior without `IgnoreNullValue`
+would be to preemptively throw a `JsonException`
+
+```C#
+var options = new JsonSerializerOptions { IgnoreNullValues = true };
+var obj = JsonSerializer.Deserialize<PointWrapper>(@"{""point"":null}"); // obj.Point is `default`
+```
+
+`Newtonsoft.Json` fails witherror:
 
 ```
 Unhandled exception. Newtonsoft.Json.JsonSerializationException: Error converting value {null} to type 'Program+Point_3D_Struct'. Path 'Point3DStruct', line 1, position 21.
 ```
 
-### Parameter name matching is case-insensitive by default.
-
-- People serialize readonly properties, might be serialized as PascalCase. Constructor arguments usual written as camel case. Case insensitive makes sense by default.
-- Allows us to support deserializing built-in types like Tuple
-
-Open question:
-
-- Is the reasoning for this worth the potential perf hit? i.e, should it be case sensitive by default
-- If we stick to case-insensitive, should we provide an option for people to change it to case-sensitive comparison?
-
-
 ### If no JSON maps to a constructor parameter, then default values are used.
 
-This is consistent with Newtonsoft.Json, and is more performant than trying to check if a constructor argument was provided.
+This is consistent with `Newtonsoft.Json`. If no JSON maps to a constructor parameter, the following fallbacks are used in order:
 
-### Non-public constructors cannot be used for deserialization
+- default value on constructor parameter
+- CLR `default` value for the parameter type
+
+Given `Person`,
+
+```C#
+public struct Person
+{
+
+    public string Name { get; }
+
+    public int Age { get; }
+
+    public Point Point { get; }
+
+    public Person(string name, int age, Point point = new Point(1, 2))
+    {
+        Name = name;
+        Age = age;
+        Point = point;
+    }
+}
+```
+
+When there are no matches for a constructor parameter, a default value is used:
+
+Another option is to throw, but this behavior would be unecessarily prohibitive for users, and would give the serializer
+more work to do to determine which parameters had no JSON.
 
 ### Specified constructors cannot have more than 64 parameters
 
-The invocation of specified
+This is an implementation detail. The maximum number of arguments permissible by IL Emit generation is 
 
-`ldarg.0`, `ladarg.1`, `ladarg.2`, `ladarg.3` allow us to load first four arguments unto the stack.
-`ldarg.s` allows us to load another 256. The implementation will be limited to this sum number.
-
-### If there's no matching JSON for a constructor argument, the default value is used
-
-- default value on parameter
-- CLR default value
-
-### Attribute presence
-
-#### The serializer will not guess which constructor to use
-
-`NotSupportedException` will be thrown in ambiguous situations.
-
-If no `[JsonConstructor]` is specified, the public parameterless constructor will be used if present
-
-If no `[JsonConstructor]` is specified and there's no public parameterless constructor, but exactly
-one public parameterized constructor, the singular parameterized will be used for deserialization.
-
-#### Only one public `[JsonConstructor]` can be specified
-
-#### If a single parameterized ctor. is present on a struct, that constructor will be used
-
-Allows support for KVP, BigInteger, ValueTuple and others
-
-#### If a single public parameterized ctor is present, and no public parameterless ct
-
+We expect most users to have significantly less than 64 parameters, but we can respond to user feedback.
 
 ### Members are never set with JSON properties that match constructor parameters
 
 Doing this can override modifications done in constructor.
-
-### Does ignore null values apply to constructor arguments
-
-Draft no
 
 ### What happens when trying to set null to non-nullable parameter
 
@@ -232,8 +520,6 @@ Draft no
 
 Last one wins
 
-## Interaction with other features
+### Serializer features work in the same way
 
-## Future
-
-### Factory create methods
+All the rules for `JsonExtensionData`, `ReferenceHandling` semantics, and other serializer features remain the same.
