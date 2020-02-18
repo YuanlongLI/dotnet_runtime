@@ -265,7 +265,7 @@ public struct Point
 }
 ```
 
-A not supported.
+The parameterized constructor is used.
 
 ```C#
 Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
@@ -297,6 +297,8 @@ Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
 Console.WriteLine(point.X); // 1
 Console.WriteLine(point.Y); // 2
 ```
+
+##### `NotSupportedException` is thrown when there are multiple parameterized ctors, but no public parameterless ctor
 
 Given another definition for `Point`,
 
@@ -398,7 +400,7 @@ Using case-sensitive matching would force users to configure options (set to cas
 
 Open questions:
 
-- Is the reasoning for this worth the potential perf hit? i.e, should it be case sensitive by default
+- Is the reasoning for this worth any potential perf hit? i.e, should it be case-sensitive by default?
   - There are usually not a lot of constructor parameters, so the number of parameter comparisons should be small.
   - If we choose case-sensitive matching by default, we'll have to provide an option for people to change it.
 
@@ -553,7 +555,7 @@ Assert.Equal(60, obj.Y); // Would be 2 if property were set directly after objec
 
 This behavior also applies to property name matches (from JSON to CLR properties) due to naming policy.
 
-### Multiple constructor parameter names
+### Serializer uses "last one wins" semantics for constructor parameter names
 
 Similar to property and dictionary key deserialization, the last JSON property that matches a constructor parameter wins.
 
@@ -564,7 +566,7 @@ Assert.Equal(4, point.X); // Note, the value isn't 1 as first seen
 Assert.Equal(2, point.Y);
 ```
 
-### JSON property name collisions (JSON mapping to multiple constructor parameters)
+### JSON property name collisions (JSON mapping to multiple constructor parameters) are not allowed
 
 Under this design, the only way for there to be collisions between constructor parameters is if a `PropertyNamingPolicy`
 yields the same name
