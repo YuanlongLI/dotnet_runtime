@@ -3,10 +3,10 @@
 ## Motivation
 
 `JsonSerializer` deserializes instances of objects (`class`es and `struct`s) using public parameterless
-constructors. If none is present, and deserialization is attempteed, the serializer throws a `NotSupportedException` with a message stating
-that objects without public parameterless constructors, including `interfaces` and `abstract` types, are
-supported for deserialization. There is no way to deserialize an instance of an object using a parameterized
-constructor.
+constructors. If none is present, and deserialization is attempteed, the serializer throws a `NotSupportedException`
+with a message stating that objects without public parameterless constructors, including `interfaces` and `abstract`
+types, are not supported for deserialization. There is no way to deserialize an instance of an object using a
+parameterized constructor.
 
 A common pattern is to make data objects immutable for various reasons. For example, given `Point`:
 
@@ -52,7 +52,7 @@ increases the scope of support for customers with various design needs.
 Deserializing with parameterized constructors also gives the opportunity to do JSON "argument" validation once on
 the creation of the instance.
 
-This feature also enables deserialization support for `Tuple<...>` instances.
+This feature also enables deserialization support for `Tuple<...>` instances, as `Tuple` types do not have parameterless constructors.
 
 This feature does not affect serialization.
 
@@ -166,59 +166,6 @@ creation methods can be considered in the future.
 
 ## Rules
 
-### Non-`public` constructors
-
-Only `public` constructors are allowed, even when using the `[JsonConstructor]` attribute. The serializer only honors
-the attribute when placed on public constructors.
-
-Given `Point`,
-
-```C#
-public class Point
-{
-    public int X { get; }
-
-    public int Y { get; }
-
-    [JsonConstructor]
-    private Point() {};
-}
-```
-
-The class is not supported for deserialization because there's no `public` constructor to use:
-
-```C#
-Point point = JsonSerializer.Deserialize<Point>("{}"); // Throws `NotSupportedException.`
-```
-
-Given `Point`,
-
-```C#
-public class Point
-{
-    public int X { get; }
-
-    public int Y { get; }
-
-    public Point() {}
-
-    [JsonConstructor]
-    private Point(int x, int y) => (X, Y) = (x, y);
-}
-```
-
-The public parameterless constructor is used, as non-public constructors are not supported:
-
-```C#
-Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
-Console.WriteLine(point.X); // 0
-Console.WriteLine(point.Y); // 0
-```
-
-To support non-`public` constructors in the future, we would likely have to add to add a global option enabling support,
-so we don't cause breaking changes e.g. throwing execptions due to having duplicate `[JsonConstructor]` attributes placed
-which were previously ignored.
-
 ### Attribute presence
 
 #### Without `[JsonConstructor]`
@@ -275,7 +222,7 @@ Console.WriteLine(point.Y); // 2
 
 Aside from this caveat, the behavior for `class`es and `struct`s are exactly the same.
 
-##### A single parameterized constructor will always be used if there's no public parameterless constructor
+##### A single public parameterized constructor will always be used if there's no public parameterless constructor
 
 Given `Point`,
 
@@ -326,9 +273,15 @@ Console.WriteLine(point.X); // 1
 Console.WriteLine(point.Y); // 2
 ```
 
+##### Non-`public` constructors will not be used unless specified with a `[JsonConstructor]` attribute
+
+The serializer doesn't offer non-`public` support by default. An attribute should be placed on any non-public constructors, even if they are
+parameterless. Ideally, people should not be able to deserialize instances of types they don't own using non-`public` constructors.
+This restriction of an attribute based opt-in, rather than a globally applied opt-in, dissuades the violation of constructor access modifiers.
+
 #### Using [JsonConstructor]
 
-##### `[JsonConstructor]` can only be used on one public parameterless constructor
+##### `[JsonConstructor]` can only be used on one constructor
 
 Given `Point`,
 
@@ -355,6 +308,52 @@ An `InvalidOperationException` is thrown:
 
 ```C#
 Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2,""z"":3}"); // Throws `InvalidOperationException`
+```
+
+### Non-`public` constructors can be used when specified with the `[JsonConstructor]` attribute
+
+Given `Point`,
+
+```C#
+public class Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    [JsonConstructor]
+    private Point() {};
+}
+```
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>("{}");
+Console.WriteLine(point.X); // 0
+Console.WriteLine(point.Y); // 0
+```
+
+Given another definition for `Point`,
+
+```C#
+public class Point
+{
+    public int X { get; }
+
+    public int Y { get; }
+
+    public Point() {}
+
+    [JsonConstructor]
+    internal Point(int x, int y) => (X, Y) = (x, y);
+}
+```
+
+The internal parameterized constructor is used:
+
+```C#
+Point point = JsonSerializer.Deserialize<Point>(@"{""x"":1,""y"":2}");
+Console.WriteLine(point.X); // 1
+Console.WriteLine(point.Y); // 2
 ```
 
 ### Parameter name matching
@@ -592,4 +591,6 @@ Point point = JsonSerializer.Deserialize<Point>(@"{}", options); // throws `Inva
 
 ### Serializer features work in the same way
 
-All the rules for `JsonExtensionData`, `ReferenceHandling` semantics, and other serializer features remain the same.
+All the rules for `JsonExtensionData`,
+[`ReferenceHandling` semantics](https://github.com/dotnet/runtime/blob/13c1e65a9f7aab201fe77e3daba11946aeb7cbaa/src/libraries/System.Text.Json/docs/ReferenceHandling_spec.md),
+and other serializer features remain the same.
