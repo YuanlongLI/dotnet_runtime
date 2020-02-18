@@ -433,44 +433,6 @@ Another option is to provide a separate option to specify a `JsonNamingPolicy` f
 This would cause friction for users as the general intention would be for the constructor parameters to use the
 `PropertyNamingPolicy`. Also, the policy for constructor parameters and properties would almost always be the same.
 
-### options.IgnoreNullValues is honored when deserializing constructor arguments
-
-This is helpful to avoid `JsonException` when null is applied to value types.
-
-Given `PointWrapper` and `Point_3D`:
-
-```C#
-public class PointWrapper
-{
-	public Point_3D Point { get; }
-
-	public PointWrapper(Point_3D point) {}
-}
-	
-public struct Point_3D
-{
-	public int X { get; }
-
-	public int Y { get; }
-
-	public int Z { get; }
-}
-```
-
-We can ignore `null` and not pass it as an argument to a non-nullable parameter. Default behavior without `IgnoreNullValue`
-would be to preemptively throw a `JsonException`
-
-```C#
-var options = new JsonSerializerOptions { IgnoreNullValues = true };
-var obj = JsonSerializer.Deserialize<PointWrapper>(@"{""point"":null}"); // obj.Point is `default`
-```
-
-`Newtonsoft.Json` fails witherror:
-
-```
-Unhandled exception. Newtonsoft.Json.JsonSerializationException: Error converting value {null} to type 'Program+Point_3D_Struct'. Path 'Point3DStruct', line 1, position 21.
-```
-
 ### If no JSON maps to a constructor parameter, then default values are used.
 
 This is consistent with `Newtonsoft.Json`. If no JSON maps to a constructor parameter, the following fallbacks are used in order:
@@ -501,24 +463,130 @@ public struct Person
 
 When there are no matches for a constructor parameter, a default value is used:
 
+```C#
+Person person = JsonSerializer.Deserialize<Person>("{}");
+Console.WriteLine(person.Name); // null
+Console.WriteLine(person.Age); // 0
+Console.WriteLine(person.Point.X); 1
+Console.WriteLine(person.Point.Y); 2
+```
+
 Another option is to throw, but this behavior would be unecessarily prohibitive for users, and would give the serializer
 more work to do to determine which parameters had no JSON.
 
+### `options.IgnoreNullValues` is honored when deserializing constructor arguments
+
+This is helpful to avoid `JsonException` when null is applied to value types.
+
+Given `PointWrapper` and `Point_3D`:
+
+```C#
+public class PointWrapper
+{
+	public Point_3D Point { get; }
+
+	public PointWrapper(Point_3D point) {}
+}
+	
+public struct Point_3D
+{
+	public int X { get; }
+
+	public int Y { get; }
+
+	public int Z { get; }
+}
+```
+
+We can ignore `null` and not pass it as an argument to a non-nullable parameter. A default value will be passed instead.
+Default behavior without `IgnoreNullValue` would be to preemptively throw a `JsonException`
+
+```C#
+var options = new JsonSerializerOptions { IgnoreNullValues = true };
+var obj = JsonSerializer.Deserialize<PointWrapper>(@"{""point"":null}"); // obj.Point is `default`
+```
+
+`Newtonsoft.Json` fails witherror:
+
+```
+Unhandled exception. Newtonsoft.Json.JsonSerializationException: Error converting value {null} to type 'Program+Point_3D'. Path 'Point', line 1, position 21.
+```
+
 ### Specified constructors cannot have more than 64 parameters
 
-This is an implementation detail. The maximum number of arguments permissible by IL Emit generation is 
+This is an implementation detail. The maximum number of arguments that can be compiled into IL is 65,536.
+
+`ldarg.0-3` and `ladarg.S` allow 256 arguments. `ldarg` can allow more.
 
 We expect most users to have significantly less than 64 parameters, but we can respond to user feedback.
 
-### Members are never set with JSON properties that match constructor parameters
+### Members are never set with JSON properties that matched constructor parameters after construction
 
-Doing this can override modifications done in constructor.
+Doing this can override modifications done in constructor. `Newtonsoft.Json` has the same behavior.
 
-### What happens when trying to set null to non-nullable parameter
+Given `Point`,
 
-### Duplicate constructor name
+```C#
+public struct Point
+{
+    [JsonPropertyName("A")]
+    public int X { get; set; }
 
-Last one wins
+    [JsonPropertyName("b")]
+    public int Y { get; set; }
+
+    public Point_PropertiesHavePropertyNames(int a, int b)
+    {
+        X = 40;
+        Y = 60;
+    }
+}
+```
+
+We can expect the following behavior:
+
+```C#
+var obj = JsonSerializer.Deserialize<Point>(@"{""A"":1,""b"":2}");
+Assert.Equal(40, obj.X); // Would be 1 if property were set directly after object construction.
+Assert.Equal(60, obj.Y); // Would be 2 if property were set directly after object construction.
+```
+
+This behavior also applies to property name matches (from JSON to CLR properties) due to naming policy.
+
+### Multiple constructor parameter names
+
+Similar to property and dictionary key deserialization, the last JSON property that matches a constructor parameter wins.
+
+```C#
+// u0078 is "x"
+Point point = JsonSerializer.Deserialize<Point>(@"{""\u0078"":1,""\u0079"":2,""x"":4}");
+Assert.Equal(4, point.X); // Note, the value isn't 1 as first seen
+Assert.Equal(2, point.Y);
+```
+
+### JSON property name collisions (JSON mapping to multiple constructor parameters)
+
+Under this design, the only way for there to be collisions between constructor parameters is if a `PropertyNamingPolicy`
+yields the same name
+
+Given `Point` and a dubious naming policy:
+
+```C#
+public class ManyToOneNamingPolicy : JsonNamingPolicy
+{
+    public override string ConvertName(string name)
+    {
+        return "JsonName";
+    }
+}
+```
+
+Deserialization scenarios which would lead to collisions will throw an `InvalidOperationException`:
+
+```C#
+var options = new JsonSerializerOptions { PropertyNamingPolicy: new ManyToOneNamingPolicy() };
+Point point = JsonSerializer.Deserialize<Point>(@"{}", options); // throws `InvalidOperationException`
+```
 
 ### Serializer features work in the same way
 
