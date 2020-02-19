@@ -134,10 +134,17 @@ namespace System.Text.Json
             {
                 case ClassType.Object:
                     {
-                        if (converter != null && !converter.ConstructorIsParameterized)
+                        // Create the policy property.
+                        PolicyProperty = CreatePolicyProperty(type, runtimeType, converter!, ClassType, options);
+
+                        if (converter != null && converter.ConstructorIsParameterized)
                         {
-                            CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
+                            // Parameter and property caching for objects deserialized with
+                            // parameterized constructors is done in their respective converters.
+                            return;
                         }
+
+                        CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
 
                         PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
@@ -179,10 +186,13 @@ namespace System.Text.Json
                         }
 
                         JsonPropertyInfo[] cacheArray;
-                        if (DetermineExtensionDataProperty(cache))
+                        if (TryDetermineExtensionDataProperty(cache, out JsonPropertyInfo? dataExtensionProperty))
                         {
+                            Debug.Assert(dataExtensionProperty != null);
+                            DataExtensionProperty = dataExtensionProperty;
+
                             // Remove from cache since it is handled independently.
-                            cache.Remove(DataExtensionProperty!.NameAsString!);
+                            cache.Remove(DataExtensionProperty.NameAsString!);
 
                             cacheArray = new JsonPropertyInfo[cache.Count + 1];
 
@@ -198,9 +208,6 @@ namespace System.Text.Json
                         PropertyCache = cache;
                         cache.Values.CopyTo(cacheArray, 0);
                         PropertyCacheArray = cacheArray;
-
-                        // Create the policy property.
-                        PolicyProperty = CreatePolicyProperty(type, runtimeType, converter!, ClassType, options);
                     }
                     break;
                 case ClassType.Enumerable:
@@ -229,7 +236,7 @@ namespace System.Text.Json
             }
         }
 
-        private bool DetermineExtensionDataProperty(Dictionary<string, JsonPropertyInfo> cache)
+        private bool TryDetermineExtensionDataProperty(Dictionary<string, JsonPropertyInfo> cache, out JsonPropertyInfo? dataExtensionProperty)
         {
             JsonPropertyInfo? jsonPropertyInfo = GetPropertyWithUniqueAttribute(typeof(JsonExtensionDataAttribute), cache);
             if (jsonPropertyInfo != null)
@@ -251,12 +258,13 @@ namespace System.Text.Json
                     ThrowHelper.ThrowInvalidOperationException_SerializationDataExtensionPropertyInvalid(this, jsonPropertyInfo);
                 }
 
-                DataExtensionProperty = jsonPropertyInfo;
+                dataExtensionProperty = jsonPropertyInfo;
                 jsonPropertyInfo.EscapedName = null;
 
                 return true;
             }
 
+            dataExtensionProperty == null;
             return false;
         }
 

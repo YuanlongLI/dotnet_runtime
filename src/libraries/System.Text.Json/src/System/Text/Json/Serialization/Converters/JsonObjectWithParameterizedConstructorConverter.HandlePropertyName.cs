@@ -254,32 +254,97 @@ namespace System.Text.Json.Serialization.Converters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void LookupProperty(
             ref ReadStack state,
+            out JsonPropertyInfo jsonPropertyInfo,
+            out bool useExtensionProperty,
+            JsonSerializerOptions options,
             ReadOnlySpan<byte> propertyName,
-            string stringPropertyName,
+            string stringPropertyName)
+        {
+            Debug.Assert(state.Current.JsonClassInfo.ClassType == ClassType.Object);
+
+            jsonPropertyInfo = state.Current.JsonClassInfo.GetProperty(ref state.Current, propertyName, stringPropertyName);
+
+            // Increment PropertyIndex so GetProperty() starts with the next property the next time this function is called.
+            state.Current.PropertyIndex++;
+
+            // Determine if we should use the extension property.
+            if (jsonPropertyInfo == JsonPropertyInfo.s_missingProperty)
+            {
+                JsonPropertyInfo? dataExtProperty = state.Current.JsonClassInfo.DataExtensionProperty;
+                if (dataExtProperty != null)
+                {
+                    state.Current.JsonPropertyNameAsString = stringPropertyName;
+                    jsonPropertyInfo = dataExtProperty;
+                }
+
+                state.Current.JsonPropertyInfo = jsonPropertyInfo;
+                useExtensionProperty = true;
+                return;
+            }
+
+            // Support JsonException.Path.
+            Debug.Assert(
+                jsonPropertyInfo.JsonPropertyName == null ||
+                options.PropertyNameCaseInsensitive ||
+                propertyName.SequenceEqual(jsonPropertyInfo.JsonPropertyName));
+
+            state.Current.JsonPropertyInfo = jsonPropertyInfo;
+
+            if (jsonPropertyInfo.JsonPropertyName == null)
+            {
+                byte[] propertyNameArray = propertyName.ToArray();
+                if (options.PropertyNameCaseInsensitive)
+                {
+                    // Each payload can have a different name here; remember the value on the temporary stack.
+                    state.Current.JsonPropertyName = propertyNameArray;
+                }
+                else
+                {
+                    // Prevent future allocs by caching globally on the JsonPropertyInfo which is specific to a Type+PropertyName
+                    // so it will match the incoming payload except when case insensitivity is enabled (which is handled above).
+                    state.Current.JsonPropertyInfo.JsonPropertyName = propertyNameArray;
+                }
+            }
+
+            state.Current.JsonPropertyInfo = jsonPropertyInfo;
+            useExtensionProperty = false;
+        }
+
+        /// <summary>
+        /// Lookup the property given its name in the reader.
+        /// </summary>
+        // AggressiveInlining used although a large method it is only called from two locations and is on a hot path.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void LookupProperty(
+            ref ReadStack state,
             out JsonPropertyInfo jsonPropertyInfo,
             out bool useExtensionProperty,
             JsonSerializerOptions options)
         {
             Debug.Assert(state.Current.JsonClassInfo.ClassType == ClassType.Object);
 
-            //ReadOnlySpan<byte> unescapedPropertyName = GetSpan(ref reader);
-            //ReadOnlySpan<byte> propertyName;
+            ReadOnlySpan<byte> escapedPropertyName = JsonSerializer.GetSpan(ref reader);
 
-            //if (reader._stringHasEscaping)
-            //{
-            //    int idx = unescapedPropertyName.IndexOf(JsonConstants.BackSlash);
-            //    Debug.Assert(idx != -1);
-            //    propertyName = GetUnescapedString(unescapedPropertyName, idx);
-            //}
-            //else
-            //{
-            //    propertyName = unescapedPropertyName;
-            //}
+            if (reader._stringHasEscaping)
+            {
+                int idx = escapedPropertyName.IndexOf(JsonConstants.BackSlash);
+                Debug.Assert(idx != -1);
+                propertyName = JsonSerializer.GetUnescapedString(escapedPropertyName, idx);
+            }
+            else
+            {
+                propertyName = escapedPropertyName;
+            }
 
-            // We checked in TryLookupConstructorParameter above that the unescaped property
-            // name does not start with '$' when the preserve-reference-handling option is active.
+            if (options.ReferenceHandling.ShouldReadPreservedReferences())
+            {
+                if (escapedPropertyName.Length > 0 && escapedPropertyName[0] == '$')
+                {
+                    JsonSerializer.ThrowUnexpectedMetadataException(escapedPropertyName, ref reader, ref state);
+                }
+            }
 
-            jsonPropertyInfo = state.Current.JsonClassInfo.GetProperty(ref state.Current, propertyName, stringPropertyName);
+            jsonPropertyInfo = state.Current.JsonClassInfo.GetProperty(ref state.Current, propertyName);
 
             // Increment PropertyIndex so GetProperty() starts with the next property the next time this function is called.
             state.Current.PropertyIndex++;

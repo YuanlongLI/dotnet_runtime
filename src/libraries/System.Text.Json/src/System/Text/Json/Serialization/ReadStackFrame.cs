@@ -44,6 +44,7 @@ namespace System.Text.Json
         public int ConstructorParameterIndex;
         public List<ParameterRef>? ParameterRefCache;
 
+        public bool[]? ConstructorArgumentState;
         public object[]? ConstructorArguments;
         public Dictionary<JsonPropertyInfo, object?>? PropertyValues;
 
@@ -54,11 +55,10 @@ namespace System.Text.Json
         public void InitializeObjectWithParameterizedConstructor(
             ref ReadStackFrame frame,
             Dictionary<string, JsonParameterInfo> parameterCache,
-            int parameterCount,
-            int propertyCount)
+            int parameterCount)
         {
             // Initialize temporary property value cache.
-            PropertyValues = new Dictionary<JsonPropertyInfo, object?>(propertyCount);
+            PropertyValues = new Dictionary<JsonPropertyInfo, object?>();
 
             // Initialize temporary extension data cache.
             InitializeExtensionDataCache(ref frame);
@@ -69,6 +69,8 @@ namespace System.Text.Json
             {
                 ConstructorArguments[parameterInfo.Position] = parameterInfo.DefaultValue!;
             }
+
+            ConstructorArgumentState = new bool[parameterCount];
         }
 
         private void InitializeExtensionDataCache(ref ReadStackFrame frame)
