@@ -703,11 +703,25 @@ namespace System.Text.Json.Serialization.Tests
         [Fact]
         public static void NumerousSimpleAndComplexParameters()
         {
-            var obj = JsonSerializer.Deserialize<ClassWithConstructor_SimpleAndComplexParameters>(ClassWithConstructor_SimpleAndComplexParameters.s_json);
-            obj.Verify();
+            //for (int i = 0; i < 1000; i++)
+            //{
+            //    JsonSerializer.Deserialize<ClassWithConstructor_SimpleAndComplexParameters>(ClassWithConstructor_SimpleAndComplexParameters.s_json);
+            //}
 
-            obj = JsonSerializer.Deserialize<ClassWithConstructor_SimpleAndComplexParameters>(JsonSerializer.Serialize(obj));
-            obj.Verify();
+            //for (int i = 0; i < 1000; i++)
+            //{
+            //    JsonSerializer.Deserialize<Class_SimpleAndComplexParameters>(Class_SimpleAndComplexParameters.s_json);
+            //}
+
+            for (int i = 0; i < 100_000; i++)
+            {
+                object array = new object[2];
+            }
+
+            //obj.Verify();
+
+            //obj = JsonSerializer.Deserialize<ClassWithConstructor_SimpleAndComplexParameters>(JsonSerializer.Serialize(obj));
+            //obj.Verify();
         }
 
         [Fact]
@@ -820,6 +834,86 @@ namespace System.Text.Json.Serialization.Tests
             };
 
             Assert.Throws<InvalidOperationException>(() => JsonSerializer.Deserialize<NamingPolicyTester>("{}", options));
+        }
+
+        private class Class_SimpleAndComplexParameters
+        {
+            public byte MyByte { get; set; }
+            public sbyte MySByte { get; set; }
+            public char MyChar { get; set; }
+            public string MyString { get; set; }
+            public decimal MyDecimal { get; set; }
+            public bool MyBooleanTrue { get; set; }
+            public bool MyBooleanFalse { get; set; }
+            public float MySingle { get; set; }
+            public double MyDouble { get; set; }
+            public DateTime MyDateTime { get; set; }
+            public DateTimeOffset MyDateTimeOffset { get; set; }
+            public Guid MyGuid { get; set; }
+            public Uri MyUri { get; set; }
+            public SampleEnum MyEnum { get; set; }
+            public SampleEnumInt64 MyInt64Enum { get; set; }
+            public SampleEnumUInt64 MyUInt64Enum { get; set; }
+            public SimpleStruct MySimpleStruct { get; set; }
+            public SimpleTestStruct MySimpleTestStruct { get; set; }
+            public int[][][] MyInt16ThreeDimensionArray { get; set; }
+            public List<List<List<int>>> MyInt16ThreeDimensionList { get; set; }
+            public List<string> MyStringList { get; set; }
+            public IEnumerable MyStringIEnumerable { get; set; }
+            public IList MyStringIList { get; set; }
+            public ICollection MyStringICollection { get; set; }
+            public IEnumerable<string> MyStringIEnumerableT { get; set; }
+
+
+            public IReadOnlyList<string> MyStringIReadOnlyListT { get; set; }
+            public ISet<string> MyStringISetT { get; set; }
+            public KeyValuePair<string, string> MyStringToStringKeyValuePair { get; set; }
+            public IDictionary MyStringToStringIDict { get; set; }
+            public Dictionary<string, string> MyStringToStringGenericDict { get; set; }
+            public IDictionary<string, string> MyStringToStringGenericIDict { get; set; }
+
+            public IImmutableDictionary<string, string> MyStringToStringIImmutableDict { get; set; }
+            public ImmutableQueue<string> MyStringImmutablQueueT { get; set; }
+            public ImmutableSortedSet<string> MyStringImmutableSortedSetT { get; set; }
+            public List<string> MyListOfNullString { get; set; }
+
+            public static readonly string s_json =
+                @"{" +
+                @"""MyByte"" : 7," +
+                @"""MySByte"" : 8," +
+                @"""MyChar"" : ""a""," +
+                @"""MyString"" : ""Hello""," +
+                @"""MyBooleanTrue"" : true," +
+                @"""MyBooleanFalse"" : false," +
+                @"""MySingle"" : 1.1," +
+                @"""MyDouble"" : 2.2," +
+                @"""MyDecimal"" : 3.3," +
+                @"""MyDateTime"" : ""2019-01-30T12:01:02.0000000Z""," +
+                @"""MyDateTimeOffset"" : ""2019-01-30T12:01:02.0000000+01:00""," +
+                @"""MyGuid"" : ""1B33498A-7B7D-4DDA-9C13-F6AA4AB449A6""," +
+                @"""MyUri"" : ""https://github.com/dotnet/runtime""," +
+                @"""MyEnum"" : 2," + // int by default
+                @"""MyInt64Enum"" : -9223372036854775808," +
+                @"""MyUInt64Enum"" : 18446744073709551615," +
+                @"""MySimpleStruct"" : {""One"" : 11, ""Two"" : 1.9999, ""Three"" : 33}," +
+                @"""MyInt16ThreeDimensionArray"" : [[[11, 12],[13, 14]],[[21,22],[23,24]]]," +
+                @"""MyInt16ThreeDimensionList"" : [[[11, 12],[13, 14]],[[21,22],[23,24]]]," +
+                @"""MyStringList"" : [""Hello""]," +
+                @"""MyStringIEnumerable"" : [""Hello""]," +
+                @"""MyStringIList"" : [""Hello""]," +
+                @"""MyStringICollection"" : [""Hello""]," +
+                @"""MyStringIEnumerableT"" : [""Hello""]," +
+                @"""MyStringIReadOnlyListT"" : [""Hello""]," +
+                @"""MyStringISetT"" : [""Hello""]," +
+                @"""MyStringToStringKeyValuePair"" : {""Key"" : ""myKey"", ""Value"" : ""myValue""}," +
+                @"""MyStringToStringIDict"" : {""key"" : ""value""}," +
+                @"""MyStringToStringGenericDict"" : {""key"" : ""value""}," +
+                @"""MyStringToStringGenericIDict"" : {""key"" : ""value""}," +
+                @"""MyStringToStringIImmutableDict"" : {""key"" : ""value""}," +
+                @"""MyStringImmutablQueueT"" : [""Hello""]," +
+                @"""MyStringImmutableSortedSetT"" : [""Hello""]," +
+                @"""MyListOfNullString"" : [null]" +
+                @"}";
         }
 
         private class ClassWithConstructor_SimpleAndComplexParameters : ITestClass
