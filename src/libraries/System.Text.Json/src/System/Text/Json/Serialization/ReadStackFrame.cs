@@ -53,15 +53,15 @@ namespace System.Text.Json
         public IDictionary<string, JsonElement>? JsonElementExtensionData;
 
         public void InitializeObjectWithParameterizedConstructor(
-            ref ReadStackFrame frame,
             Dictionary<string, JsonParameterInfo> parameterCache,
+            JsonPropertyInfo? dataExtensionProperty,
             int parameterCount)
         {
             // Initialize temporary property value cache.
             PropertyValues = new Dictionary<JsonPropertyInfo, object?>();
 
             // Initialize temporary extension data cache.
-            InitializeExtensionDataCache(ref frame);
+            InitializeExtensionDataCache(dataExtensionProperty);
 
             // Initialize temporary constructor argument cache.
             ConstructorArguments = new object[parameterCount];
@@ -73,12 +73,11 @@ namespace System.Text.Json
             ConstructorArgumentState = new bool[parameterCount];
         }
 
-        private void InitializeExtensionDataCache(ref ReadStackFrame frame)
+        private void InitializeExtensionDataCache(JsonPropertyInfo? dataExtensionProperty)
         {
-            JsonPropertyInfo? extensionDataProperty = frame.JsonClassInfo.DataExtensionProperty;
-            if (extensionDataProperty != null)
+            if (dataExtensionProperty != null)
             {
-                Type underlyingIDictionaryType = extensionDataProperty.DeclaredPropertyType.GetCompatibleGenericInterface(typeof(IDictionary<,>))!;
+                Type underlyingIDictionaryType = dataExtensionProperty.DeclaredPropertyType.GetCompatibleGenericInterface(typeof(IDictionary<,>))!;
                 Debug.Assert(underlyingIDictionaryType.IsGenericType);
                 Debug.Assert(underlyingIDictionaryType.GetGenericArguments().Length == 2);
                 Debug.Assert(underlyingIDictionaryType.GetGenericArguments()[0].UnderlyingSystemType == typeof(string));
@@ -86,7 +85,7 @@ namespace System.Text.Json
                     underlyingIDictionaryType.GetGenericArguments()[1].UnderlyingSystemType == typeof(object) ||
                     underlyingIDictionaryType.GetGenericArguments()[1].UnderlyingSystemType == typeof(JsonElement));
 
-                JsonClassInfo.ConstructorDelegate createObject = extensionDataProperty.RuntimeClassInfo.CreateObject!;
+                JsonClassInfo.ConstructorDelegate createObject = dataExtensionProperty.RuntimeClassInfo.CreateObject!;
 
                 if (underlyingIDictionaryType.GetGenericArguments()[1] == typeof(object))
                 {

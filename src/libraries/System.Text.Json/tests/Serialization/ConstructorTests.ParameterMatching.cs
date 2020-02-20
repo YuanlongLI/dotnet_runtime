@@ -1262,7 +1262,7 @@ namespace System.Text.Json.Serialization.Tests
         }
 
         [Fact]
-        public static void NoConctructorHandlingWhenObjectHasConverter()
+        public static void NoConstructorHandlingWhenObjectHasConverter()
         {
             // Baseline without converter
             string serialized = JsonSerializer.Serialize(new Point_3D(10, 6));
@@ -1778,14 +1778,14 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(2, point.Y);
         }
 
-        [Fact]
-        public static void Last_Parameter_Wins()
-        {
-            // u0078 is "x"
-            Point_2D point = JsonSerializer.Deserialize<Point_2D>(@"{""\u0078"":1,""\u0079"":2,""x"":4}");
-            Assert.Equal(4, point.X);
-            Assert.Equal(2, point.Y);
-        }
+        //[Fact]
+        //public static void LastParameterWins()
+        //{
+        //    // u0078 is "x"
+        //    Point_2D point = JsonSerializer.Deserialize<Point_2D>(@"{""\u0078"":1,""\u0079"":2,""x"":4}");
+        //    Assert.Equal(4, point.X);
+        //    Assert.Equal(2, point.Y);
+        //}
 
         [Fact]
         public static void BitVector32_UsesStructDefaultCtor_MultipleParameterizedCtor()

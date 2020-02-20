@@ -26,9 +26,6 @@ namespace System.Text.Json
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
         public volatile Dictionary<string, JsonPropertyInfo>? PropertyCache;
 
-        // The number of serializable properties on a POCO (except the optionla extension property).
-        public int PropertyCount { get; private set; }
-
         // All of the serializable properties on a POCO including the optional extension property.
         // Used for performance during serialization instead of 'PropertyCache' above.
         public volatile JsonPropertyInfo[]? PropertyCacheArray;
@@ -148,8 +145,7 @@ namespace System.Text.Json
 
                         PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-                        PropertyCount = properties.Length;
-                        Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(PropertyCount);
+                        Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Length);
 
                         foreach (PropertyInfo propertyInfo in properties)
                         {
@@ -178,7 +174,7 @@ namespace System.Text.Json
                                     }
                                     else if (jsonPropertyInfo.ShouldDeserialize == true || jsonPropertyInfo.ShouldSerialize == true)
                                     {
-                                        ThrowHelper.ThrowInvalidOperationException_SerializerPropertyNameConflict(this, jsonPropertyInfo);
+                                        ThrowHelper.ThrowInvalidOperationException_SerializerPropertyNameConflict(Type, jsonPropertyInfo);
                                     }
                                     // else ignore jsonPropertyInfo since it has [JsonIgnore].
                                 }
@@ -186,7 +182,7 @@ namespace System.Text.Json
                         }
 
                         JsonPropertyInfo[] cacheArray;
-                        if (TryDetermineExtensionDataProperty(cache, out JsonPropertyInfo? dataExtensionProperty))
+                        if (TryDetermineExtensionDataProperty(Type, cache, options, out JsonPropertyInfo? dataExtensionProperty))
                         {
                             Debug.Assert(dataExtensionProperty != null);
                             DataExtensionProperty = dataExtensionProperty;
@@ -236,9 +232,13 @@ namespace System.Text.Json
             }
         }
 
-        private bool TryDetermineExtensionDataProperty(Dictionary<string, JsonPropertyInfo> cache, out JsonPropertyInfo? dataExtensionProperty)
+        public static bool TryDetermineExtensionDataProperty(
+            Type type,
+            Dictionary<string, JsonPropertyInfo> cache,
+            JsonSerializerOptions options,
+            out JsonPropertyInfo? dataExtensionProperty)
         {
-            JsonPropertyInfo? jsonPropertyInfo = GetPropertyWithUniqueAttribute(typeof(JsonExtensionDataAttribute), cache);
+            JsonPropertyInfo? jsonPropertyInfo = GetPropertyWithUniqueAttribute(type, typeof(JsonExtensionDataAttribute), cache);
             if (jsonPropertyInfo != null)
             {
                 Type declaredPropertyType = jsonPropertyInfo.DeclaredPropertyType;
@@ -247,7 +247,7 @@ namespace System.Text.Json
                     typeof(IDictionary<string, object>).IsAssignableFrom(declaredPropertyType) ||
                     typeof(IDictionary<string, JsonElement>).IsAssignableFrom(declaredPropertyType))
                 {
-                    JsonConverter? converter = Options.GetConverter(declaredPropertyType);
+                    JsonConverter? converter = options.GetConverter(declaredPropertyType);
                     if (converter == null)
                     {
                         ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(declaredPropertyType);
@@ -255,7 +255,7 @@ namespace System.Text.Json
                 }
                 else
                 {
-                    ThrowHelper.ThrowInvalidOperationException_SerializationDataExtensionPropertyInvalid(this, jsonPropertyInfo);
+                    ThrowHelper.ThrowInvalidOperationException_SerializationDataExtensionPropertyInvalid(type, jsonPropertyInfo);
                 }
 
                 dataExtensionProperty = jsonPropertyInfo;
@@ -264,11 +264,11 @@ namespace System.Text.Json
                 return true;
             }
 
-            dataExtensionProperty == null;
+            dataExtensionProperty = null;
             return false;
         }
 
-        private JsonPropertyInfo? GetPropertyWithUniqueAttribute(Type attributeType, Dictionary<string, JsonPropertyInfo> cache)
+        private static JsonPropertyInfo? GetPropertyWithUniqueAttribute(Type classType, Type attributeType, Dictionary<string, JsonPropertyInfo> cache)
         {
             JsonPropertyInfo? property = null;
 
@@ -280,7 +280,7 @@ namespace System.Text.Json
                 {
                     if (property != null)
                     {
-                        ThrowHelper.ThrowInvalidOperationException_SerializationDuplicateTypeAttribute(Type, attributeType);
+                        ThrowHelper.ThrowInvalidOperationException_SerializationDuplicateTypeAttribute(classType, attributeType);
                     }
 
                     property = jsonPropertyInfo;
@@ -407,7 +407,7 @@ namespace System.Text.Json
             return info;
         }
 
-        private Dictionary<string, JsonPropertyInfo> CreatePropertyCache(int capacity)
+        public Dictionary<string, JsonPropertyInfo> CreatePropertyCache(int capacity)
         {
             StringComparer comparer;
 
@@ -426,7 +426,7 @@ namespace System.Text.Json
         public JsonPropertyInfo? PolicyProperty { get; private set; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool TryIsPropertyRefEqual(in PropertyRef propertyRef, ReadOnlySpan<byte> propertyName, ulong key, [NotNullWhen(true)] ref JsonPropertyInfo? info)
+        public static bool TryIsPropertyRefEqual(in PropertyRef propertyRef, ReadOnlySpan<byte> propertyName, ulong key, [NotNullWhen(true)] ref JsonPropertyInfo? info)
         {
             if (key == propertyRef.Key)
             {
