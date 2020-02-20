@@ -10,6 +10,9 @@ using System.Globalization;
 using System.Linq;
 using Xunit;
 
+using Newtonsoft.Json;
+using Utf8Json;
+
 namespace System.Text.Json.Serialization.Tests
 {
     public static partial class ConstructorTests
@@ -20,6 +23,26 @@ namespace System.Text.Json.Serialization.Tests
         public static void ReturnNullForNullObjects(Type type)
         {
             Assert.Null(JsonSerializer.Deserialize("null", type));
+        }
+
+        [Fact]
+        public static void Point()
+        {
+            string json = @"{""x"":1,""y"":2}";
+            for (int i = 0; i < 10_000; i++)
+            {
+                JsonSerializer.Deserialize<Point_2D>(json);
+            }
+        }
+
+        [Fact]
+        public static void ParameterlessPoint()
+        {
+            string json = @"{""x"":1,""y"":2}";
+            for (int i = 0; i < 10_000; i++)
+            {
+                JsonSerializer.Deserialize<Parameterless_Point>(json);
+            }
         }
 
         public class Point_2D
@@ -1382,6 +1405,7 @@ namespace System.Text.Json.Serialization.Tests
 
             string input = sb.ToString();
 
+            //object obj = JsonSerializer.Deserialize(input, type);
             object obj = JsonSerializer.Deserialize(input, type);
             for (int i = 0; i < 64; i++)
             {
@@ -1894,6 +1918,13 @@ namespace System.Text.Json.Serialization.Tests
 
             [JsonConstructor]
             public SimpleClassWithParameterizedCtor_Derived_GenericIDictionary_ObjectExt(int x) { }
+        }
+
+        public class Parameterless_Point
+        {
+            public int X { get; set; }
+
+            public int Y { get; set; }
         }
     }
 }

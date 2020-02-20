@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -54,8 +55,7 @@ namespace System.Text.Json
 
         public void InitializeObjectWithParameterizedConstructor(
             Dictionary<string, JsonParameterInfo> parameterCache,
-            JsonPropertyInfo? dataExtensionProperty,
-            int parameterCount)
+            JsonPropertyInfo? dataExtensionProperty)
         {
             // Initialize temporary property value cache.
             PropertyValues = new Dictionary<JsonPropertyInfo, object?>();
@@ -64,13 +64,9 @@ namespace System.Text.Json
             InitializeExtensionDataCache(dataExtensionProperty);
 
             // Initialize temporary constructor argument cache.
-            ConstructorArguments = new object[parameterCount];
-            foreach (JsonParameterInfo parameterInfo in parameterCache.Values)
-            {
-                ConstructorArguments[parameterInfo.Position] = parameterInfo.DefaultValue!;
-            }
+            InitializeConstructorArgumentCache(parameterCache);
 
-            ConstructorArgumentState = new bool[parameterCount];
+            ConstructorArgumentState = ArrayPool<bool>.Shared.Rent(parameterCache.Count);
         }
 
         private void InitializeExtensionDataCache(JsonPropertyInfo? dataExtensionProperty)
@@ -96,6 +92,18 @@ namespace System.Text.Json
                 {
                     JsonElementExtensionData = (IDictionary<string, JsonElement>)createObject()!;
                 }
+            }
+        }
+
+        private void InitializeConstructorArgumentCache(Dictionary<string, JsonParameterInfo> parameterCache)
+        {
+            //ConstructorArguments = new object[parameterCache.Count];
+            // We know that this will be a maximum of 64 items.
+            ConstructorArguments = ArrayPool<object>.Shared.Rent(parameterCache.Count);
+
+            foreach (JsonParameterInfo parameterInfo in parameterCache.Values)
+            {
+                ConstructorArguments[parameterInfo.Position] = parameterInfo.DefaultValue!;
             }
         }
 

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -67,7 +68,7 @@ namespace System.Text.Json.Serialization.Converters
                     throw new NotSupportedException();
                 }
 
-                state.Current.InitializeObjectWithParameterizedConstructor(parameterCache, _dataExtensionProperty, _parameterCount);
+                state.Current.InitializeObjectWithParameterizedConstructor(parameterCache, _dataExtensionProperty);
 
                 // Read all properties until we've parsed all constructor arguments or hit the end token.
                 ReadAllConstructorArguments(ref reader, options, ref state, out bool continueReading);
@@ -75,6 +76,10 @@ namespace System.Text.Json.Serialization.Converters
                 // Construct object with arguments.
                 Debug.Assert(state.Current.ConstructorArguments != null);
                 obj = _createObject!(state.Current.ConstructorArguments)!;
+
+                Debug.Assert(state.Current.ConstructorArgumentState != null);
+                ArrayPool<object>.Shared.Return(state.Current.ConstructorArguments);
+                ArrayPool<bool>.Shared.Return(state.Current.ConstructorArgumentState);
 
                 // Apply extension data.
                 if (_dataExtensionProperty != null)
