@@ -29,15 +29,54 @@ namespace System.Text.Json
             return () => Activator.CreateInstance(type, nonPublic: false);
         }
 
-        public override JsonClassInfo.ParameterizedConstructorDelegate<T>? CreateParameterizedConstructor<T>(ConstructorInfo constructor)
+        public override JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>?
+            CreateParameterizedConstructor<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(ConstructorInfo constructor)
         {
-            Type type = typeof(T);
+            Type type = typeof(TTypeToConvert);
             Debug.Assert(!type.IsAbstract);
             Debug.Assert(type.GetConstructors().Contains(constructor));
 
+            int parameterCount = constructor.GetParameters().Length;
+
             // This call will only invoke the desired public constructor, as the arguments below will match the method signature exactly.
             // We verfied the constructor exists and is public during the selection of the calling converter.
-            return (arguments) => (T)Activator.CreateInstance(type, arguments)!;
+            return (arg0, arg1, arg2, arg3, arg4, arg5, arg6, restOfArgs) =>
+            {
+                object[] arguments = new object[parameterCount];
+
+                for (int i = 0; i < parameterCount; i++)
+                {
+                    switch (i)
+                    {
+                        case 0:
+                            arguments[0] = arg0!;
+                            break;
+                        case 1:
+                            arguments[1] = arg1!;
+                            break;
+                        case 2:
+                            arguments[2] = arg2!;
+                            break;
+                        case 3:
+                            arguments[3] = arg3!;
+                            break;
+                        case 4:
+                            arguments[4] = arg4!;
+                            break;
+                        case 5:
+                            arguments[5] = arg5!;
+                            break;
+                        case 6:
+                            arguments[6] = arg6!;
+                            break;
+                        default:
+                            arguments[i] = restOfArgs[i - 7];
+                            break;
+                    }
+                }
+
+                return (TTypeToConvert)Activator.CreateInstance(type, arguments)!;
+            };
         }
 
         public override Action<TCollection, object> CreateAddMethodDelegate<TCollection>()

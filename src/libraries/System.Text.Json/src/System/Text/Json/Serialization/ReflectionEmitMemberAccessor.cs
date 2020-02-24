@@ -56,9 +56,10 @@ namespace System.Text.Json
             return (JsonClassInfo.ConstructorDelegate)dynamicMethod.CreateDelegate(typeof(JsonClassInfo.ConstructorDelegate));
         }
 
-        public override JsonClassInfo.ParameterizedConstructorDelegate<T>? CreateParameterizedConstructor<T>(ConstructorInfo constructor)
+        public override JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>?
+            CreateParameterizedConstructor<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(ConstructorInfo constructor)
         {
-            Type type = typeof(T);
+            Type type = typeof(TTypeToConvert);
             Debug.Assert(!type.IsAbstract);
             Debug.Assert(type.GetConstructors().Contains(constructor));
 
@@ -79,28 +80,54 @@ namespace System.Text.Json
 
             ILGenerator generator = dynamicMethod.GetILGenerator();
 
-            for (int i = 0; i < parameterCount; i++)
+            for (int paramIndex = 0; paramIndex < 7; paramIndex++)
             {
-                Type paramType = parameters[i].ParameterType;
-
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldc_I4_S, i);
-                generator.Emit(OpCodes.Ldelem_Ref);
-
-                if (paramType.IsValueType)
+                switch (paramIndex)
                 {
-                    generator.Emit(OpCodes.Unbox_Any, paramType);
+                    case 0:
+                        generator.Emit(OpCodes.Ldarg_0);
+                        break;
+                    case 1:
+                        generator.Emit(OpCodes.Ldarg_1);
+                        break;
+                    case 2:
+                        generator.Emit(OpCodes.Ldarg_2);
+                        break;
+                    case 3:
+                        generator.Emit(OpCodes.Ldarg_3);
+                        break;
+                    case 4:
+                    case 5:
+                    case 6:
+                        generator.Emit(OpCodes.Ldarg_S, paramIndex);
+                        break;
+                    default:
+                        // If there are more than 7 parameters, read from object array.
+                        Type paramType = parameters[paramIndex].ParameterType;
+
+                        // Object array is 8th parameter of this method.
+                        generator.Emit(OpCodes.Ldarg_S, 7);
+                        generator.Emit(OpCodes.Ldc_I4_S, paramIndex - 7);
+                        generator.Emit(OpCodes.Ldelem_Ref);
+
+                        if (paramType.IsValueType)
+                        {
+                            generator.Emit(OpCodes.Unbox_Any, paramType);
+                        }
+                        else
+                        {
+                            generator.Emit(OpCodes.Castclass, paramType);
+                        };
+                        break;
                 }
-                else
-                {
-                    generator.Emit(OpCodes.Castclass, paramType);
-                };
             }
 
             generator.Emit(OpCodes.Newobj, constructor);
             generator.Emit(OpCodes.Ret);
 
-            return (JsonClassInfo.ParameterizedConstructorDelegate<T>)dynamicMethod.CreateDelegate(typeof(JsonClassInfo.ParameterizedConstructorDelegate<T>));
+            return (JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>)
+                dynamicMethod.CreateDelegate(
+                    typeof(JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>));
         }
 
         public override Action<TCollection, object> CreateAddMethodDelegate<TCollection>()

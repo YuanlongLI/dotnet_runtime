@@ -13,7 +13,8 @@ namespace System.Text.Json.Serialization.Converters
     /// Implementation of <cref>JsonObjectConverter{T}</cref> that supports the deserialization
     /// of JSON objects using parameterized constructors.
     /// </summary>
-    internal sealed partial class JsonObjectWithParameterizedConstructorConverter<T> : JsonObjectConverter<T>
+    internal sealed partial class JsonObjectWithParameterizedConstructorConverter<TypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> :
+        JsonObjectConverter<TypeToConvert>
     {
         private const int ParameterNameKeyLength = 7;
 

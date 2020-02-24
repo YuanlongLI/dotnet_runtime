@@ -10,9 +10,6 @@ using System.Globalization;
 using System.Linq;
 using Xunit;
 
-using Newtonsoft.Json;
-using Utf8Json;
-
 namespace System.Text.Json.Serialization.Tests
 {
     public static partial class ConstructorTests

@@ -7,10 +7,12 @@ using System.Text.Json.Serialization;
 
 namespace System.Text.Json
 {
-    internal class JsonParameterInfo<TConverter> : JsonParameterInfo
+    internal class JsonParameterInfo<TTypeToConvert> : JsonParameterInfo
     {
-        private JsonConverter<TConverter> _converter = null!;
+        private JsonConverter<TTypeToConvert> _converter = null!;
         private Type _runtimePropertyType = null!;
+
+        public TTypeToConvert TypedDefaultValue { get; private set; } = default!;
 
         public override void Initialize(
             Type declaredPropertyType,
@@ -30,10 +32,18 @@ namespace System.Text.Json
                 classType,
                 options);
 
-            _converter = (JsonConverter<TConverter>)converter;
+            _converter = (JsonConverter<TTypeToConvert>)converter;
             _runtimePropertyType = runtimePropertyType;
 
-            DefaultValue = parameterInfo.HasDefaultValue ? parameterInfo.DefaultValue : default(TConverter)!;
+            if (parameterInfo.HasDefaultValue)
+            {
+                DefaultValue = parameterInfo.DefaultValue;
+                TypedDefaultValue = (TTypeToConvert)parameterInfo.DefaultValue!;
+            }
+            else
+            {
+                DefaultValue = TypedDefaultValue;
+            }
         }
 
         public override bool ReadJson(ref ReadStack state, ref Utf8JsonReader reader, JsonSerializerOptions options, out object? value)
@@ -58,8 +68,37 @@ namespace System.Text.Json
                 }
                 else
                 {
-                    success = _converter.TryRead(ref reader, _runtimePropertyType, options, ref state, out TConverter typedValue);
+                    success = _converter.TryRead(ref reader, _runtimePropertyType, options, ref state, out TTypeToConvert typedValue);
                     value = typedValue;
+                }
+            }
+
+            return success;
+        }
+
+        public bool ReadJsonTyped(ref ReadStack state, ref Utf8JsonReader reader, JsonSerializerOptions options, out TTypeToConvert value)
+        {
+            bool success;
+            bool isNullToken = reader.TokenType == JsonTokenType.Null;
+
+            if (isNullToken &&
+                ((!_converter.HandleNullValue && !state.IsContinuation) || options.IgnoreNullValues))
+            {
+                // Don't have to check for IgnoreNullValue option here because we set the default value (likely null) regardless
+                value = TypedDefaultValue;
+                return true;
+            }
+            else
+            {
+                // Optimize for internal converters by avoiding the extra call to TryRead.
+                if (_converter.CanUseDirectReadOrWrite)
+                {
+                    value = _converter.Read(ref reader, _runtimePropertyType, options);
+                    return true;
+                }
+                else
+                {
+                    success = _converter.TryRead(ref reader, _runtimePropertyType, options, ref state, out value);
                 }
             }
 

@@ -24,6 +24,7 @@
     <Compile Include="System\Text\Json\JsonHelpers.cs" />
     <Compile Include="System\Text\Json\JsonHelpers.Date.cs" />
     <Compile Include="System\Text\Json\JsonTokenType.cs" />
+    <Compile Include="System\Text\Json\Serialization\ConstructorArguments.cs" />
     <Compile Include="System\Text\Json\ThrowHelper.cs" />
     <Compile Include="System\Text\Json\ThrowHelper.Serialization.cs" />
     <Compile Include="System\Text\Json\Document\JsonDocument.cs" />
@@ -125,7 +126,7 @@
     <Compile Include="System\Text\Json\Serialization\JsonNamingPolicy.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonObjectConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonParameterInfo.cs" />
-    <Compile Include="System\Text\Json\Serialization\JsonParameterInfoOfTConverter.cs" />
+    <Compile Include="System\Text\Json\Serialization\JsonParameterInfoOfTTypeToConvert.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonPropertyInfo.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonPropertyInfoOfTConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonPropertyNameAttribute.cs" />
