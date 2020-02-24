@@ -23,26 +23,48 @@ namespace System.Text.Json.Serialization.Converters
         }
 
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonObjectDefaultConverter`1")]
-        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonObjectWithParameterizedConstructorConverter`1")]
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonObjectWithParameterizedConstructorConverter`8")]
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
             ConstructorInfo? constructor = GetDeserializationConstructor(typeToConvert);
 
-            Type genericType;
+            Type converterType;
             object[]? arguments = null;
 
-            if (constructor == null || typeToConvert.IsAbstract || constructor.GetParameters().Length == 0)
+            ParameterInfo[]? parameters;
+
+            if (constructor == null || typeToConvert.IsAbstract || (parameters = constructor.GetParameters()).Length == 0)
             {
-                genericType = typeof(JsonObjectDefaultConverter<>);
+                converterType = typeof(JsonObjectDefaultConverter<>).MakeGenericType(typeToConvert);
             }
             else
             {
-                genericType = typeof(JsonObjectWithParameterizedConstructorConverter<>);
+                Type[] typeArguments = new Type[8];
+
+                typeArguments[0] = typeToConvert;
+
+                int parameterCount = parameters.Length;
+                Type objectType = typeof(object);
+
+                // Get the first 7 parameters; use dummy parameters if less than 7.
+                for (int i = 0; i < 7; i++)
+                {
+                    if (i < parameterCount)
+                    {
+                        typeArguments[i + 1] = parameters[i].ParameterType;
+                    }
+                    else
+                    {
+                        typeArguments[i + 1] = objectType;
+                    }
+                }
+
+                converterType = typeof(JsonObjectWithParameterizedConstructorConverter<,,,,,,,>).MakeGenericType(typeArguments);
                 arguments = new object[] { constructor, options };
             }
 
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                genericType.MakeGenericType(typeToConvert),
+                converterType,
                 BindingFlags.Instance | BindingFlags.Public,
                 binder: null,
                 arguments,

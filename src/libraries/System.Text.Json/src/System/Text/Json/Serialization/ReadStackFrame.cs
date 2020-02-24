@@ -55,7 +55,7 @@ namespace System.Text.Json
         public IDictionary<string, object>? ObjectExtensionData;
         public IDictionary<string, JsonElement>? JsonElementExtensionData;
 
-        public void InitializeObjectWithParameterizedConstructor<TArg1, TArg2, TArg3, Targ4, TArg5, TArg6, TArg7>(
+        public void InitializeObjectWithParameterizedConstructor<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(
             Dictionary<string, JsonParameterInfo> parameterCache,
             JsonPropertyInfo? dataExtensionProperty)
         {
@@ -66,9 +66,7 @@ namespace System.Text.Json
             InitializeExtensionDataCache(dataExtensionProperty);
 
             // Initialize temporary constructor argument cache.
-            InitializeConstructorArgumentCache<TArg1, TArg2, TArg3, Targ4, TArg5, TArg6, TArg7>(parameterCache);
-
-            ConstructorArgumentState = ArrayPool<bool>.Shared.Rent(parameterCache.Count);
+            InitializeConstructorArgumentCache<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(parameterCache);
         }
 
         private void InitializeExtensionDataCache(JsonPropertyInfo? dataExtensionProperty)
@@ -97,14 +95,15 @@ namespace System.Text.Json
             }
         }
 
-        private void InitializeConstructorArgumentCache<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>
+        private void InitializeConstructorArgumentCache<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>
             (Dictionary<string, JsonParameterInfo> parameterCache)
         {
-             var arguments = new ConstructorArguments<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>();
+             var arguments = new ConstructorArguments<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>();
+            const int numArgsToKeepUnboxed = 7;
 
-            if (parameterCache.Count > 7)
+            if (parameterCache.Count > numArgsToKeepUnboxed)
             {
-                ConstructorArgumentsArray = ArrayPool<object>.Shared.Rent(parameterCache.Count - 7);
+                ConstructorArgumentsArray = ArrayPool<object>.Shared.Rent(parameterCache.Count - numArgsToKeepUnboxed);
             }
 
             foreach (JsonParameterInfo parameterInfo in parameterCache.Values)
@@ -113,6 +112,9 @@ namespace System.Text.Json
 
                 switch (position)
                 {
+                    case 0:
+                        arguments.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
+                        break;
                     case 1:
                         arguments.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
                         break;
@@ -131,17 +133,15 @@ namespace System.Text.Json
                     case 6:
                         arguments.Arg6 = ((JsonParameterInfo<TArg6>)parameterInfo).TypedDefaultValue!;
                         break;
-                    case 7:
-                        arguments.Arg7 = ((JsonParameterInfo<TArg7>)parameterInfo).TypedDefaultValue!;
-                        break;
                     default:
                         Debug.Assert(ConstructorArgumentsArray != null);
-                        ConstructorArgumentsArray[position] = parameterInfo.DefaultValue!;
+                        ConstructorArgumentsArray[position - numArgsToKeepUnboxed] = parameterInfo.DefaultValue!;
                         break;
                 }
             }
 
             ConstructorArguments = arguments;
+            ConstructorArgumentState = ArrayPool<bool>.Shared.Rent(parameterCache.Count);
         }
 
         public void EndConstructorParameter()

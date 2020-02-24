@@ -22,26 +22,6 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Null(JsonSerializer.Deserialize("null", type));
         }
 
-        [Fact]
-        public static void Point()
-        {
-            string json = @"{""x"":1,""y"":2}";
-            for (int i = 0; i < 10_000; i++)
-            {
-                JsonSerializer.Deserialize<Point_2D>(json);
-            }
-        }
-
-        [Fact]
-        public static void ParameterlessPoint()
-        {
-            string json = @"{""x"":1,""y"":2}";
-            for (int i = 0; i < 10_000; i++)
-            {
-                JsonSerializer.Deserialize<Parameterless_Point>(json);
-            }
-        }
-
         public class Point_2D
         {
             public int X { get; }
@@ -62,6 +42,27 @@ namespace System.Text.Json.Serialization.Tests
 
             [JsonConstructor]
             public Point_3D(int x, int y, int z = 50) => (X, Y, Z) = (x, y, z);
+        }
+
+        [Fact]
+        public static void Point()
+        {
+            string json = @"{""x"":1,""y"":2}";
+            JsonSerializer.Deserialize<Point_2D>(json);
+            //for (int i = 0; i < 10_000; i++)
+            //{
+            //    JsonSerializer.Deserialize<Point_2D>(json);
+            //}
+        }
+
+        [Fact]
+        public static void ParameterlessPoint()
+        {
+            string json = @"{""x"":1,""y"":2}";
+            for (int i = 0; i < 10_000; i++)
+            {
+                JsonSerializer.Deserialize<Parameterless_Point>(json);
+            }
         }
 
         [Fact]
@@ -733,15 +734,16 @@ namespace System.Text.Json.Serialization.Tests
             //    JsonSerializer.Deserialize<Class_SimpleAndComplexParameters>(Class_SimpleAndComplexParameters.s_json);
             //}
 
-            for (int i = 0; i < 100_000; i++)
-            {
-                object array = new object[2];
-            }
+            //for (int i = 0; i < 100_000; i++)
+            //{
+            //    object array = new object[2];
+            //}
 
-            //obj.Verify();
+            var obj = JsonSerializer.Deserialize<ClassWithConstructor_SimpleAndComplexParameters>(ClassWithConstructor_SimpleAndComplexParameters.s_json);
+            obj.Verify();
 
-            //obj = JsonSerializer.Deserialize<ClassWithConstructor_SimpleAndComplexParameters>(JsonSerializer.Serialize(obj));
-            //obj.Verify();
+            obj = JsonSerializer.Deserialize<ClassWithConstructor_SimpleAndComplexParameters>(JsonSerializer.Serialize(obj));
+            obj.Verify();
         }
 
         [Fact]
@@ -1387,8 +1389,8 @@ namespace System.Text.Json.Serialization.Tests
         }
 
         [Theory]
-        [InlineData(typeof(Class_With_Ctor_With_64_Params))]
         [InlineData(typeof(Struct_With_Ctor_With_64_Params))]
+        [InlineData(typeof(Class_With_Ctor_With_64_Params))]
         public static void CanDeserialize_ObjectWith_Ctor_With_64_Params(Type type)
         {
             StringBuilder sb = new StringBuilder();
@@ -1402,7 +1404,6 @@ namespace System.Text.Json.Serialization.Tests
 
             string input = sb.ToString();
 
-            //object obj = JsonSerializer.Deserialize(input, type);
             object obj = JsonSerializer.Deserialize(input, type);
             for (int i = 0; i < 64; i++)
             {

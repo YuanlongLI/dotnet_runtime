@@ -16,6 +16,10 @@ namespace System.Text.Json.Serialization.Converters
     internal sealed partial class JsonObjectWithParameterizedConstructorConverter<TypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>
         : JsonObjectConverter<TypeToConvert>
     {
+        // The number of constructor arguments we keep strongly typed after
+        // which we fallback to a codepath which boxes the arguments.
+        private const int UnboxedParamCountThreshold = 7;
+
         // Parameter info
         private readonly ParameterInfo[] _parameters;
         private readonly int _parameterCount;
@@ -78,11 +82,26 @@ namespace System.Text.Json.Serialization.Converters
 
                 // Construct object with arguments.
                 Debug.Assert(state.Current.ConstructorArguments != null);
-                obj = _createObject!(state.Current.ConstructorArguments, state.Current.ConstructorArgumentsArray)!;
+
+                var arguments = (ConstructorArguments<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>)state.Current.ConstructorArguments;
+
+                obj = _createObject(
+                    arguments.Arg0,
+                    arguments.Arg1,
+                    arguments.Arg2,
+                    arguments.Arg3,
+                    arguments.Arg4,
+                    arguments.Arg5,
+                    arguments.Arg6,
+                    state.Current.ConstructorArgumentsArray!)!;
+
+                if (state.Current.ConstructorArgumentsArray != null)
+                {
+                    ArrayPool<object>.Shared.Return(state.Current.ConstructorArgumentsArray, clearArray: true);
+                }
 
                 Debug.Assert(state.Current.ConstructorArgumentState != null);
-                ArrayPool<object>.Shared.Return(state.Current.ConstructorArgumentsArray);
-                ArrayPool<bool>.Shared.Return(state.Current.ConstructorArgumentState);
+                ArrayPool<bool>.Shared.Return(state.Current.ConstructorArgumentState, clearArray: true);
 
                 // Apply extension data.
                 if (_dataExtensionProperty != null)
@@ -357,13 +376,17 @@ namespace System.Text.Json.Serialization.Converters
 
                     int position = jsonParameterInfo.Position;
 
-                    // Performant path for first 7 arguments with no boxing.
-                    if (position < 8)
+                    // Performant path for the threshold number of arguments with no boxing.
+                    if (position < UnboxedParamCountThreshold)
                     {
-                        var arguments = (ConstructorArguments<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>)state.Current.ConstructorArguments!;
+                        var arguments = (ConstructorArguments<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>)state.Current.ConstructorArguments!;
 
                         switch (position)
                         {
+                            case 0:
+                                ((JsonParameterInfo<TArg0>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg0 arg0);
+                                arguments.Arg0 = arg0;
+                                break;
                             case 1:
                                 ((JsonParameterInfo<TArg1>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg1 arg1);
                                 arguments.Arg1 = arg1;
@@ -388,10 +411,6 @@ namespace System.Text.Json.Serialization.Converters
                                 ((JsonParameterInfo<TArg6>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg6 arg6);
                                 arguments.Arg6 = arg6;
                                 break;
-                            case 7:
-                                ((JsonParameterInfo<TArg7>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg7 arg7);
-                                arguments.Arg7 = arg7;
-                                break;
                             default:
                                 Debug.Fail("This should never happen.");
                                 break;
@@ -402,7 +421,7 @@ namespace System.Text.Json.Serialization.Converters
                         jsonParameterInfo.ReadJson(ref state, ref reader, options, out object? argN);
 
                         Debug.Assert(state.Current.ConstructorArgumentsArray != null);
-                        state.Current.ConstructorArgumentsArray[jsonParameterInfo.Position] = argN!;
+                        state.Current.ConstructorArgumentsArray[jsonParameterInfo.Position - UnboxedParamCountThreshold] = argN!;
                     }
 
                     state.Current.EndConstructorParameter();

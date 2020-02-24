@@ -74,15 +74,15 @@ namespace System.Text.Json
             var dynamicMethod = new DynamicMethod(
                 ConstructorInfo.ConstructorName,
                 type,
-                new[] { typeof(object[]) },
+                new[] { typeof(TArg0), typeof(TArg1), typeof(TArg2), typeof(TArg3), typeof(TArg4), typeof(TArg5), typeof(TArg6), typeof(object[]) },
                 typeof(ReflectionEmitMemberAccessor).Module,
                 skipVisibility: true);
 
             ILGenerator generator = dynamicMethod.GetILGenerator();
 
-            for (int paramIndex = 0; paramIndex < 7; paramIndex++)
+            for (int index = 0; index < parameterCount; index++)
             {
-                switch (paramIndex)
+                switch (index)
                 {
                     case 0:
                         generator.Emit(OpCodes.Ldarg_0);
@@ -99,15 +99,15 @@ namespace System.Text.Json
                     case 4:
                     case 5:
                     case 6:
-                        generator.Emit(OpCodes.Ldarg_S, paramIndex);
+                        generator.Emit(OpCodes.Ldarg_S, index);
                         break;
                     default:
                         // If there are more than 7 parameters, read from object array.
-                        Type paramType = parameters[paramIndex].ParameterType;
+                        Type paramType = parameters[index].ParameterType;
 
                         // Object array is 8th parameter of this method.
                         generator.Emit(OpCodes.Ldarg_S, 7);
-                        generator.Emit(OpCodes.Ldc_I4_S, paramIndex - 7);
+                        generator.Emit(OpCodes.Ldc_I4_S, index - 7);
                         generator.Emit(OpCodes.Ldelem_Ref);
 
                         if (paramType.IsValueType)
