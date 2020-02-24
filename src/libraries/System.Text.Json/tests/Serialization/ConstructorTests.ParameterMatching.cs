@@ -48,11 +48,11 @@ namespace System.Text.Json.Serialization.Tests
         public static void Point()
         {
             string json = @"{""x"":1,""y"":2}";
-            JsonSerializer.Deserialize<Point_2D>(json);
-            //for (int i = 0; i < 10_000; i++)
-            //{
-            //    JsonSerializer.Deserialize<Point_2D>(json);
-            //}
+            //JsonSerializer.Deserialize<Point_2D>(json);
+            for (int i = 0; i < 100_000; i++)
+            {
+                JsonSerializer.Deserialize<Point_2D>(json);
+            }
         }
 
         [Fact]
