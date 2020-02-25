@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -332,6 +333,7 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReadAllConstructorArguments(ref Utf8JsonReader reader, JsonSerializerOptions options, ref ReadStack state, out bool continueReading)
         {
             while (true)
@@ -508,6 +510,7 @@ namespace System.Text.Json.Serialization.Converters
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReadPropertiesAndPopulateObject(object obj, ref Utf8JsonReader reader, JsonSerializerOptions options, ref ReadStack state)
         {
             while (true)
