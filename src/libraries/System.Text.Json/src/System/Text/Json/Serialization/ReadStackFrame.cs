@@ -55,95 +55,6 @@ namespace System.Text.Json
         public IDictionary<string, object>? ObjectExtensionData;
         public IDictionary<string, JsonElement>? JsonElementExtensionData;
 
-        public void InitializeObjectWithParameterizedConstructor<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(
-            Dictionary<string, JsonParameterInfo> parameterCache,
-            JsonPropertyInfo? dataExtensionProperty)
-        {
-            // Initialize temporary property value cache.
-            PropertyValues = new Dictionary<JsonPropertyInfo, object?>();
-
-            // Initialize temporary extension data cache.
-            InitializeExtensionDataCache(dataExtensionProperty);
-
-            // Initialize temporary constructor argument cache.
-            InitializeConstructorArgumentCache<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(parameterCache);
-        }
-
-        private void InitializeExtensionDataCache(JsonPropertyInfo? dataExtensionProperty)
-        {
-            if (dataExtensionProperty != null)
-            {
-                Type underlyingIDictionaryType = dataExtensionProperty.DeclaredPropertyType.GetCompatibleGenericInterface(typeof(IDictionary<,>))!;
-                Debug.Assert(underlyingIDictionaryType.IsGenericType);
-                Debug.Assert(underlyingIDictionaryType.GetGenericArguments().Length == 2);
-                Debug.Assert(underlyingIDictionaryType.GetGenericArguments()[0].UnderlyingSystemType == typeof(string));
-                Debug.Assert(
-                    underlyingIDictionaryType.GetGenericArguments()[1].UnderlyingSystemType == typeof(object) ||
-                    underlyingIDictionaryType.GetGenericArguments()[1].UnderlyingSystemType == typeof(JsonElement));
-
-                JsonClassInfo.ConstructorDelegate createObject = dataExtensionProperty.RuntimeClassInfo.CreateObject!;
-
-                if (underlyingIDictionaryType.GetGenericArguments()[1] == typeof(object))
-                {
-                    ExtensionDataIsObject = true;
-                    ObjectExtensionData = (IDictionary<string, object>)createObject()!;
-                }
-                else
-                {
-                    JsonElementExtensionData = (IDictionary<string, JsonElement>)createObject()!;
-                }
-            }
-        }
-
-        private void InitializeConstructorArgumentCache<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>
-            (Dictionary<string, JsonParameterInfo> parameterCache)
-        {
-             var arguments = new ConstructorArguments<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>();
-            const int numArgsToKeepUnboxed = 7;
-
-            if (parameterCache.Count > numArgsToKeepUnboxed)
-            {
-                ConstructorArgumentsArray = ArrayPool<object>.Shared.Rent(parameterCache.Count - numArgsToKeepUnboxed);
-            }
-
-            foreach (JsonParameterInfo parameterInfo in parameterCache.Values)
-            {
-                int position = parameterInfo.Position;
-
-                switch (position)
-                {
-                    case 0:
-                        arguments.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 1:
-                        arguments.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 2:
-                        arguments.Arg2 = ((JsonParameterInfo<TArg2>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 3:
-                        arguments.Arg3 = ((JsonParameterInfo<TArg3>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 4:
-                        arguments.Arg4 = ((JsonParameterInfo<TArg4>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 5:
-                        arguments.Arg5 = ((JsonParameterInfo<TArg5>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 6:
-                        arguments.Arg6 = ((JsonParameterInfo<TArg6>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    default:
-                        Debug.Assert(ConstructorArgumentsArray != null);
-                        ConstructorArgumentsArray[position - numArgsToKeepUnboxed] = parameterInfo.DefaultValue!;
-                        break;
-                }
-            }
-
-            ConstructorArguments = arguments;
-            ConstructorArgumentState = ArrayPool<bool>.Shared.Rent(parameterCache.Count);
-        }
-
         public void EndConstructorParameter()
         {
             JsonConstructorParameterInfo = null;
@@ -205,6 +116,7 @@ namespace System.Text.Json
             OriginalTokenType = JsonTokenType.None;
             PropertyIndex = 0;
             PropertyRefCache = null;
+            PropertyValues = null;
             ReturnValue = null;
 
             EndProperty();

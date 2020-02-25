@@ -55,8 +55,7 @@ namespace System.Text.Json.Serialization.Converters
 
             object? obj = null;
 
-            Dictionary<string, JsonParameterInfo> parameterCache = GetParameterCache(options);
-            CreatePropertyCaches(parameterCache, options);
+            CreatePropertyCaches(options);
 
             if (!state.SupportContinuation && !shouldReadPreservedReferences)
             {
@@ -74,8 +73,7 @@ namespace System.Text.Json.Serialization.Converters
                     throw new NotSupportedException();
                 }
 
-                state.Current.InitializeObjectWithParameterizedConstructor<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(
-                    parameterCache, _dataExtensionProperty);
+                InitializeObjectWithParameterizedConstructor(ref state.Current, options);
 
                 // Read all properties until we've parsed all constructor arguments or hit the end token.
                 ReadAllConstructorArguments(ref reader, options, ref state, out bool continueReading);
@@ -110,32 +108,27 @@ namespace System.Text.Json.Serialization.Converters
 
                     if (state.Current.ExtensionDataIsObject)
                     {
-                        Debug.Assert(state.Current.ObjectExtensionData != null);
-
-                        if (state.Current.ObjectExtensionData.Count > 0)
+                        if (state.Current.ObjectExtensionData?.Count > 0)
                         {
                             _dataExtensionProperty.SetValueAsObject(obj, state.Current.ObjectExtensionData);
                         }
                     }
-                    else
+                    else if (state.Current.JsonElementExtensionData?.Count > 0)
                     {
-                        Debug.Assert(state.Current.JsonElementExtensionData != null);
-
-                        if (state.Current.JsonElementExtensionData.Count > 0)
-                        {
-                            _dataExtensionProperty.SetValueAsObject(obj, state.Current.JsonElementExtensionData);
-                        }
+                        _dataExtensionProperty.SetValueAsObject(obj, state.Current.JsonElementExtensionData);
                     }
                 }
 
                 // Apply properties read before we parsed all constructor arguments.
-                Debug.Assert(state.Current.PropertyValues != null);
-                foreach (KeyValuePair<JsonPropertyInfo, object?> pair in state.Current.PropertyValues)
+                if (state.Current.PropertyValues != null)
                 {
-                    JsonPropertyInfo jsonPropertyInfo = pair.Key;
+                    foreach (KeyValuePair<JsonPropertyInfo, object?> pair in state.Current.PropertyValues)
+                    {
+                        JsonPropertyInfo jsonPropertyInfo = pair.Key;
 
-                    object? propertyValue = pair.Value;
-                    jsonPropertyInfo.SetValueAsObject(obj, propertyValue);
+                        object? propertyValue = pair.Value;
+                        jsonPropertyInfo.SetValueAsObject(obj, propertyValue);
+                    }
                 }
 
                 if (continueReading)
@@ -472,28 +465,41 @@ namespace System.Text.Json.Serialization.Converters
                     {
                         jsonPropertyInfo.ReadJson(ref state, ref reader, out object? argument);
 
-                        Debug.Assert(state.Current.PropertyValues != null);
+                        if (state.Current.PropertyValues == null)
+                        {
+                            state.Current.PropertyValues = new Dictionary<JsonPropertyInfo, object?>();
+                        }
                         state.Current.PropertyValues[jsonPropertyInfo] = argument;
                     }
                     else if (state.Current.ExtensionDataIsObject)
                     {
                         jsonPropertyInfo.ReadJsonExtensionDataValue(ref state, ref reader, out object? extensionDataValue);
 
-                        if (state.Current.ObjectExtensionData != null)
+                        if (state.Current.ObjectExtensionData == null)
                         {
-                            Debug.Assert(state.Current.JsonPropertyNameAsString != null);
-                            state.Current.ObjectExtensionData[state.Current.JsonPropertyNameAsString] = extensionDataValue!;
+                            Debug.Assert(_dataExtensionProperty != null);
+
+                            JsonClassInfo.ConstructorDelegate createObject = _dataExtensionProperty!.RuntimeClassInfo.CreateObject!;
+                            state.Current.ObjectExtensionData = (IDictionary<string, object>)createObject()!;
                         }
+
+                        Debug.Assert(state.Current.JsonPropertyNameAsString != null);
+                        state.Current.ObjectExtensionData[state.Current.JsonPropertyNameAsString] = extensionDataValue!;
                     }
                     else
                     {
                         jsonPropertyInfo.ReadJsonExtensionDataValue(ref state, ref reader, out JsonElement extensionDataValue);
 
-                        if (state.Current.JsonElementExtensionData != null)
+                        if (state.Current.JsonElementExtensionData == null)
                         {
-                            Debug.Assert(state.Current.JsonPropertyNameAsString != null);
-                            state.Current.JsonElementExtensionData[state.Current.JsonPropertyNameAsString] = extensionDataValue;
+                            Debug.Assert(_dataExtensionProperty != null);
+
+                            JsonClassInfo.ConstructorDelegate createObject = _dataExtensionProperty.RuntimeClassInfo.CreateObject!;
+                            state.Current.JsonElementExtensionData = (IDictionary<string, JsonElement>)createObject()!;
                         }
+
+                        Debug.Assert(state.Current.JsonPropertyNameAsString != null);
+                        state.Current.JsonElementExtensionData[state.Current.JsonPropertyNameAsString] = extensionDataValue;
                     }
 
                     // Ensure any exception thrown in the next read does not have a property in its JsonPath.
@@ -557,8 +563,7 @@ namespace System.Text.Json.Serialization.Converters
             // Minimize boxing for structs by only boxing once here
             object? objectValue = value;
 
-            Dictionary<string, JsonParameterInfo> parameterCache = GetParameterCache(options);
-            CreatePropertyCaches(parameterCache, options);
+            CreatePropertyCaches(options);
 
             if (!state.SupportContinuation)
             {
@@ -698,7 +703,7 @@ namespace System.Text.Json.Serialization.Converters
 
         internal override bool ConstructorIsParameterized => true;
 
-        private void CreatePropertyCaches(Dictionary<string, JsonParameterInfo> parameterCache, JsonSerializerOptions options)
+        private void CreatePropertyCaches(JsonSerializerOptions options)
         {
             if (_propertyCachesCreated)
             {
@@ -707,6 +712,7 @@ namespace System.Text.Json.Serialization.Converters
 
             PropertyInfo[] properties = base.TypeToConvert.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
+            Dictionary<string, JsonParameterInfo> parameterCache = GetParameterCache(options);
             Dictionary<string, JsonPropertyInfo> propertyCache = CreatePropertyCache(properties.Length, options);
             Dictionary<string, JsonPropertyInfo> parameterMatches = new Dictionary<string, JsonPropertyInfo>(_parameterCount);
             Dictionary<string, JsonPropertyInfo> cacheToPopulate;
@@ -884,6 +890,98 @@ namespace System.Text.Json.Serialization.Converters
             }
 
             return new Dictionary<string, JsonPropertyInfo>(capacity, comparer);
+        }
+
+        public void InitializeObjectWithParameterizedConstructor(ref ReadStackFrame frame, JsonSerializerOptions options)
+        {
+            // Initialize temporary extension data cache.
+            InitializeExtensionDataCache(ref frame);
+
+            // Initialize temporary constructor argument cache.
+            InitializeConstructorArgumentCache(ref frame, options);
+        }
+
+        private void InitializeConstructorArgumentCache(ref ReadStackFrame frame, JsonSerializerOptions options)
+        {
+            var arguments = new ConstructorArguments<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>();
+            const int numArgsToKeepUnboxed = 7;
+
+            Dictionary<string, JsonParameterInfo> parameterCache = GetParameterCache(options);
+
+            if (parameterCache.Count > numArgsToKeepUnboxed)
+            {
+                frame.ConstructorArgumentsArray = ArrayPool<object>.Shared.Rent(parameterCache.Count - numArgsToKeepUnboxed);
+            }
+
+            foreach (JsonParameterInfo parameterInfo in parameterCache.Values)
+            {
+                int position = parameterInfo.Position;
+
+                switch (position)
+                {
+                    case 0:
+                        arguments.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
+                        break;
+                    case 1:
+                        arguments.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
+                        break;
+                    case 2:
+                        arguments.Arg2 = ((JsonParameterInfo<TArg2>)parameterInfo).TypedDefaultValue!;
+                        break;
+                    case 3:
+                        arguments.Arg3 = ((JsonParameterInfo<TArg3>)parameterInfo).TypedDefaultValue!;
+                        break;
+                    case 4:
+                        arguments.Arg4 = ((JsonParameterInfo<TArg4>)parameterInfo).TypedDefaultValue!;
+                        break;
+                    case 5:
+                        arguments.Arg5 = ((JsonParameterInfo<TArg5>)parameterInfo).TypedDefaultValue!;
+                        break;
+                    case 6:
+                        arguments.Arg6 = ((JsonParameterInfo<TArg6>)parameterInfo).TypedDefaultValue!;
+                        break;
+                    default:
+                        Debug.Assert(frame.ConstructorArgumentsArray != null);
+                        frame.ConstructorArgumentsArray[position - numArgsToKeepUnboxed] = parameterInfo.DefaultValue!;
+                        break;
+                }
+            }
+
+            frame.ConstructorArguments = arguments;
+            frame.ConstructorArgumentState = ArrayPool<bool>.Shared.Rent(parameterCache.Count);
+        }
+
+        private void InitializeExtensionDataCache(ref ReadStackFrame frame)
+        {
+            if (_dataExtensionProperty != null)
+            {
+                Type underlyingIDictionaryType = _dataExtensionProperty.DeclaredPropertyType.GetCompatibleGenericInterface(typeof(IDictionary<,>))!;
+                Debug.Assert(underlyingIDictionaryType.IsGenericType);
+                Debug.Assert(underlyingIDictionaryType.GetGenericArguments().Length == 2);
+                Debug.Assert(underlyingIDictionaryType.GetGenericArguments()[0].UnderlyingSystemType == typeof(string));
+                Debug.Assert(
+                    underlyingIDictionaryType.GetGenericArguments()[1].UnderlyingSystemType == typeof(object) ||
+                    underlyingIDictionaryType.GetGenericArguments()[1].UnderlyingSystemType == typeof(JsonElement));
+
+                JsonClassInfo.ConstructorDelegate createObject = _dataExtensionProperty.RuntimeClassInfo.CreateObject!;
+
+                if (createObject == null)
+                {
+                    throw new NotSupportedException();
+                }
+
+                frame.ExtensionDataIsObject = underlyingIDictionaryType.GetGenericArguments()[1] == typeof(object);
+
+                //if (underlyingIDictionaryType.GetGenericArguments()[1] == typeof(object))
+                //{
+                //    frame.ExtensionDataIsObject = true;
+                //    frame.ObjectExtensionData = (IDictionary<string, object>)createObject()!;
+                //}
+                //else
+                //{
+                //    frame.JsonElementExtensionData = (IDictionary<string, JsonElement>)createObject()!;
+                //}
+            }
         }
     }
 }
