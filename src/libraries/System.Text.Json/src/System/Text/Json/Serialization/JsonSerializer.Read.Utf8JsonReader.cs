@@ -321,7 +321,7 @@ namespace System.Text.Json
                     valueSpan.CopyTo(rentedSpan);
                 }
 
-                JsonReaderOptions originalReaderOptions = readerState.Options;
+                JsonReaderOptions originalReaderOptions = state.Options;
 
                 var newReader = new Utf8JsonReader(rentedSpan, originalReaderOptions);
 
