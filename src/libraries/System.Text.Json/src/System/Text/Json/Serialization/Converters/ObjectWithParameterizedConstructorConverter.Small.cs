@@ -12,15 +12,15 @@ namespace System.Text.Json.Serialization.Converters
     /// Implementation of <cref>JsonObjectConverter{T}</cref> that supports the deserialization
     /// of JSON objects using parameterized constructors.
     /// </summary>
-    internal sealed class SmallObjectWithParameterizedConstructorConverter<TypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> :
+    internal sealed class SmallObjectWithParameterizedConstructorConverter<TypeToConvert, TArg0, TArg1, TArg2, TArg3> :
         ObjectWithParameterizedConstructorConverter<TypeToConvert>
     {
-        private JsonClassInfo.ParameterizedConstructorDelegate<TypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>? _createObject;
+        private JsonClassInfo.ParameterizedConstructorDelegate<TypeToConvert, TArg0, TArg1, TArg2, TArg3>? _createObject;
 
         internal override void Initialize(ConstructorInfo constructor, JsonSerializerOptions options)
         {
             base.Initialize(constructor, options);
-            _createObject = options.MemberAccessorStrategy.CreateParameterizedConstructor<TypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(constructor)!;
+            _createObject = options.MemberAccessorStrategy.CreateParameterizedConstructor<TypeToConvert, TArg0, TArg1, TArg2, TArg3>(constructor)!;
         }
 
         internal override bool OnTryRead(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options, ref ReadStack state, out TypeToConvert value)
@@ -56,16 +56,13 @@ namespace System.Text.Json.Serialization.Converters
                 ReadConstructorArguments(ref reader, options, ref state);
 
                 Debug.Assert(state.Current.ConstructorArguments != null);
-                var arguments = (ConstructorArguments<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>)state.Current.ConstructorArguments;
+                var argCache = (ArgumentCache<TArg0, TArg1, TArg2, TArg3>)state.Current.ConstructorArguments;
 
                 obj = _createObject(
-                    arguments.Arg0,
-                    arguments.Arg1,
-                    arguments.Arg2,
-                    arguments.Arg3,
-                    arguments.Arg4,
-                    arguments.Arg5,
-                    arguments.Arg6)!;
+                    argCache.Arg0,
+                    argCache.Arg1,
+                    argCache.Arg2,
+                    argCache.Arg3)!;
 
                 Debug.Assert(state.Current.ConstructorArgumentState != null);
                 ArrayPool<bool>.Shared.Return(state.Current.ConstructorArgumentState, clearArray: true);
@@ -287,37 +284,25 @@ namespace System.Text.Json.Serialization.Converters
             Debug.Assert(state.Current.ConstructorArguments != null);
             Debug.Assert(state.Current.ConstructorArgumentsArray == null);
 
-            var arguments = (ConstructorArguments<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>)state.Current.ConstructorArguments;
+            var argCache = (ArgumentCache<TArg0, TArg1, TArg2, TArg3>)state.Current.ConstructorArguments;
 
             switch (jsonParameterInfo.Position)
             {
                 case 0:
                     ((JsonParameterInfo<TArg0>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg0 arg0);
-                    arguments.Arg0 = arg0;
+                    argCache.Arg0 = arg0;
                     break;
                 case 1:
                     ((JsonParameterInfo<TArg1>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg1 arg1);
-                    arguments.Arg1 = arg1;
+                    argCache.Arg1 = arg1;
                     break;
                 case 2:
                     ((JsonParameterInfo<TArg2>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg2 arg2);
-                    arguments.Arg2 = arg2;
+                    argCache.Arg2 = arg2;
                     break;
                 case 3:
                     ((JsonParameterInfo<TArg3>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg3 arg3);
-                    arguments.Arg3 = arg3;
-                    break;
-                case 4:
-                    ((JsonParameterInfo<TArg4>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg4 arg4);
-                    arguments.Arg4 = arg4;
-                    break;
-                case 5:
-                    ((JsonParameterInfo<TArg5>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg5 arg5);
-                    arguments.Arg5 = arg5;
-                    break;
-                case 6:
-                    ((JsonParameterInfo<TArg6>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, options, out TArg6 arg6);
-                    arguments.Arg6 = arg6;
+                    argCache.Arg3 = arg3;
                     break;
                 default:
                     Debug.Fail("This should never happen.");
@@ -327,7 +312,7 @@ namespace System.Text.Json.Serialization.Converters
 
         private void InitializeConstructorArgumentCache(ref ReadStackFrame frame, JsonSerializerOptions options)
         {
-            var arguments = new ConstructorArguments<TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>();
+            var argCache = new ArgumentCache<TArg0, TArg1, TArg2, TArg3>();
 
             foreach (JsonParameterInfo parameterInfo in ParameterCache.Values)
             {
@@ -336,25 +321,16 @@ namespace System.Text.Json.Serialization.Converters
                 switch (position)
                 {
                     case 0:
-                        arguments.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
+                        argCache.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
                         break;
                     case 1:
-                        arguments.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
+                        argCache.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
                         break;
                     case 2:
-                        arguments.Arg2 = ((JsonParameterInfo<TArg2>)parameterInfo).TypedDefaultValue!;
+                        argCache.Arg2 = ((JsonParameterInfo<TArg2>)parameterInfo).TypedDefaultValue!;
                         break;
                     case 3:
-                        arguments.Arg3 = ((JsonParameterInfo<TArg3>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 4:
-                        arguments.Arg4 = ((JsonParameterInfo<TArg4>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 5:
-                        arguments.Arg5 = ((JsonParameterInfo<TArg5>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 6:
-                        arguments.Arg6 = ((JsonParameterInfo<TArg6>)parameterInfo).TypedDefaultValue!;
+                        argCache.Arg3 = ((JsonParameterInfo<TArg3>)parameterInfo).TypedDefaultValue!;
                         break;
                     default:
                         Debug.Fail("We should never get here.");
@@ -362,7 +338,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
             }
 
-            frame.ConstructorArguments = arguments;
+            frame.ConstructorArguments = argCache;
 
             frame.ConstructorArgumentState = ArrayPool<bool>.Shared.Rent(ParameterCount);
             frame.JsonPropertyKindIndicator = ArrayPool<bool>.Shared.Rent(PropertyNameCountCacheThreshold);
