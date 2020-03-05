@@ -230,7 +230,9 @@ namespace System.Text.Json
 
         public bool ReadJsonExtensionDataValue(ref ReadStack state, ref Utf8JsonReader reader, out JsonElement value)
         {
-            JsonConverter<JsonElement> converter = JsonSerializerOptions.GetJsonElementConverter();
+            JsonConverter<JsonElement> converter = (JsonConverter<JsonElement>)
+                state.Current.JsonPropertyInfo!.RuntimeClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase;
+
             if (!converter.TryRead(ref reader, typeof(JsonElement), Options, ref state, out JsonElement jsonElement))
             {
                 // JsonElement is a struct that must be read in full.
@@ -249,15 +251,18 @@ namespace System.Text.Json
                 value = null;
                 return true;
             }
-            JsonConverter<JsonElement> converter = JsonSerializerOptions.GetJsonElementConverter();
-            if (!converter.TryRead(ref reader, typeof(JsonElement), Options, ref state, out JsonElement jsonElement))
+
+            JsonConverter<object> converter = (JsonConverter<object>)
+                state.Current.JsonPropertyInfo!.RuntimeClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase;
+
+            if (!converter.TryRead(ref reader, typeof(JsonElement), Options, ref state, out object? obj))
             {
                 // JsonElement is a struct that must be read in full.
                 value = null;
                 return false;
             }
 
-            value = jsonElement;
+            value = obj;
             return true;
         }
 

@@ -181,7 +181,7 @@ namespace System.Text.Json
             bool isNullToken = reader.TokenType == JsonTokenType.Null;
             if (isNullToken && !Converter.HandleNullValue && !state.IsContinuation)
             {
-                value = default(TConverter)!;
+                value = default(TTypeToConvert)!;
                 success = true;
             }
             else
@@ -194,7 +194,7 @@ namespace System.Text.Json
                 }
                 else
                 {
-                    success = Converter.TryRead(ref reader, RuntimePropertyType!, Options, ref state, out TConverter typedValue);
+                    success = Converter.TryRead(ref reader, RuntimePropertyType!, Options, ref state, out TTypeToConvert typedValue);
                     value = typedValue;
                 }
             }

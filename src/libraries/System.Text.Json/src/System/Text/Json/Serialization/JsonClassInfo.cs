@@ -292,7 +292,7 @@ namespace System.Text.Json
 
         // AggressiveInlining used although a large method it is only called from one location and is on a hot path.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public JsonPropertyInfo GetProperty(ref ReadStackFrame frame, ReadOnlySpan<byte> propertyName, string? stringPropertyName = null)
+        public JsonPropertyInfo GetProperty(ReadOnlySpan<byte> propertyName, ref ReadStackFrame frame)
         {
             JsonPropertyInfo? info = null;
 
@@ -354,10 +354,7 @@ namespace System.Text.Json
 
             // No cached item was found. Try the main list which has all of the properties.
 
-            if (stringPropertyName == null)
-            {
-                stringPropertyName = JsonHelpers.Utf8GetString(propertyName);
-            }
+            string stringPropertyName = JsonHelpers.Utf8GetString(propertyName);
 
             Debug.Assert(PropertyCache != null);
 

@@ -22,7 +22,7 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonObjectDefaultConverter`1")]
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.LargeObjectWithParameterizedConstructorConverter`1")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.SmallObjectWithParameterizedConstructorConverter`5")]
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
@@ -35,7 +35,7 @@ namespace System.Text.Json.Serialization.Converters
 
             if (constructor == null || typeToConvert.IsAbstract || parameters!.Length == 0)
             {
-                converterType = typeof(JsonObjectDefaultConverter<>).MakeGenericType(typeToConvert);
+                converterType = typeof(ObjectDefaultConverter<>).MakeGenericType(typeToConvert);
             }
             else
             {

@@ -299,7 +299,7 @@ namespace System.Text.Json.Serialization.Converters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ReadOnlySpan<byte> GetUnescapedPropertyName(ref Utf8JsonReader reader)
         {
-            ReadOnlySpan<byte> escapedPropertyName = JsonSerializer.GetSpan(ref reader);
+            ReadOnlySpan<byte> escapedPropertyName = reader.GetSpan();
             ReadOnlySpan<byte> unescapedPropertyName;
 
             if (reader._stringHasEscaping)
