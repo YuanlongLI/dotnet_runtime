@@ -175,7 +175,7 @@ namespace System.Text.Json
             return success;
         }
 
-        public override bool ReadJson(ref ReadStack state, ref Utf8JsonReader reader, out object? value)
+        public override bool ReadJsonAsObject(ref ReadStack state, ref Utf8JsonReader reader, out object? value)
         {
             bool success;
             bool isNullToken = reader.TokenType == JsonTokenType.Null;
