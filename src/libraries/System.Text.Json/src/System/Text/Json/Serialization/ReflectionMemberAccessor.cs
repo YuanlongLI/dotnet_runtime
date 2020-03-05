@@ -40,8 +40,8 @@ namespace System.Text.Json.Serialization
             return (arguments) => (T)Activator.CreateInstance(type, arguments)!;
         }
 
-        public override JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>?
-            CreateParameterizedConstructor<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(ConstructorInfo constructor)
+        public override JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3>?
+            CreateParameterizedConstructor<TTypeToConvert, TArg0, TArg1, TArg2, TArg3>(ConstructorInfo constructor)
         {
             Type type = typeof(TTypeToConvert);
             Debug.Assert(!type.IsAbstract);
@@ -53,7 +53,7 @@ namespace System.Text.Json.Serialization
 
             // This call will only invoke the desired public constructor, as the arguments below will match the method signature exactly.
             // We verfied the constructor exists and is public during the selection of the calling converter.
-            return (arg0, arg1, arg2, arg3, arg4, arg5, arg6) =>
+            return (arg0, arg1, arg2, arg3) =>
             {
                 object[] arguments = new object[parameterCount];
 
@@ -73,17 +73,8 @@ namespace System.Text.Json.Serialization
                         case 3:
                             arguments[3] = arg3!;
                             break;
-                        case 4:
-                            arguments[4] = arg4!;
-                            break;
-                        case 5:
-                            arguments[5] = arg5!;
-                            break;
-                        case 6:
-                            arguments[6] = arg6!;
-                            break;
                         default:
-                            Debug.Fail("We shouldn't be here if there are more than 7 parameters.");
+                            Debug.Fail("We shouldn't be here if there are more than 4 parameters.");
                             break;
                     }
                 }

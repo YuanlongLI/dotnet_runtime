@@ -98,5 +98,19 @@ namespace System.Text.Json
         public const int LowSurrogateStartValue = 0xDC00;
         public const int LowSurrogateEndValue = 0xDFFF;
         public const int BitShiftBy10 = 0x400;
+
+        // Parameterized constructor helpers
+
+        // The maximum number of parameters a constructor can have where it can be considered
+        // for a fast-path on deserialization where we don't box the constructor arguments and
+        // read the JSON object payload in one pass, but do minimal boxing of object members.
+        public const int UnboxedParameterCountThreshold = 4;
+
+        // The maximum number of value-type members on an object that might be boxed on
+        // deserialization(after we exclude the number of value-type members in the constructor)
+        // where the object can be considrerd for a fast-path on deserialization where we
+        // don't box the constructor arguments and read the JSON object payload in one pass,
+        // but do minimal boxing of object members.
+        public const int ValueTypePropertyCountThreshold = 4;
     }
 }

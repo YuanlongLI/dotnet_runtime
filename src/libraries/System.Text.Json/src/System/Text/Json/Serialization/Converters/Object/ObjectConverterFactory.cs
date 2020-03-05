@@ -24,7 +24,7 @@ namespace System.Text.Json.Serialization.Converters
 
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.JsonObjectDefaultConverter`1")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.LargeObjectWithParameterizedConstructorConverter`1")]
-        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.SmallObjectWithParameterizedConstructorConverter`8")]
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.SmallObjectWithParameterizedConstructorConverter`5")]
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
             JsonConverter converter;
@@ -39,20 +39,16 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                const int smallObjectCtorParamCount = 7;
                 int parameterCount = parameters.Length;
 
-                if (parameterCount <= smallObjectCtorParamCount)
+                if ((parameterCount <= JsonConstants.UnboxedParameterCountThreshold)
+                    && (GetNumberOfValueTypeProperties(typeToConvert, constructor) < JsonConstants.ValueTypePropertyCountThreshold))
                 {
                     Type placeHolderType = typeof(object);
-
-                    Type[] typeArguments = new Type[smallObjectCtorParamCount + 1];
+                    Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
 
                     typeArguments[0] = typeToConvert;
-
-                    // Get the first n parameters; use dummy parameters if less than n,
-                    // where n = smallObjectCtorParamCount.
-                    for (int i = 0; i < smallObjectCtorParamCount; i++)
+                    for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
                     {
                         if (i < parameterCount)
                         {
@@ -60,11 +56,12 @@ namespace System.Text.Json.Serialization.Converters
                         }
                         else
                         {
+                            // Use placeholder arguments if there are less args than the threshold.
                             typeArguments[i + 1] = placeHolderType;
                         }
                     }
 
-                    converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,,,,>).MakeGenericType(typeArguments);
+                    converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
                 }
                 else
                 {
@@ -116,6 +113,37 @@ namespace System.Text.Json.Serialization.Converters
             }
 
             return ctorWithAttribute ?? parameterlessCtor;
+        }
+
+        // Gives a naive estimate of the number of value type properties we'll deserialize directly into.
+        // We'll box them if we do deserialization in one pass and temporarily cache properties as we
+        // parse them while searching for
+        // We only care about this for objects that have parameterized constructors.
+        private int GetNumberOfValueTypeProperties(Type type, ConstructorInfo constructor)
+        {
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            ParameterInfo[] parameters = constructor.GetParameters();
+
+            int numValueTypes = 0;
+
+            foreach (PropertyInfo property in properties)
+            {
+                if (property.GetIndexParameters().Length == 0 && property.PropertyType.IsValueType)
+                {
+                    numValueTypes++;
+                }
+            }
+
+            foreach (ParameterInfo parameter in parameters)
+            {
+                if (parameter.ParameterType.IsValueType)
+                {
+                    numValueTypes--;
+                }
+            }
+
+            // A negative return value is fine here.
+            return numValueTypes;
         }
     }
 }

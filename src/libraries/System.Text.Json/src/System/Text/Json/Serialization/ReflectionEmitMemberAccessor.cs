@@ -104,8 +104,8 @@ namespace System.Text.Json.Serialization
             return (JsonClassInfo.ParameterizedConstructorDelegate<T>)dynamicMethod.CreateDelegate(typeof(JsonClassInfo.ParameterizedConstructorDelegate<T>));
         }
 
-        public override JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>?
-            CreateParameterizedConstructor<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(ConstructorInfo constructor)
+        public override JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3>?
+            CreateParameterizedConstructor<TTypeToConvert, TArg0, TArg1, TArg2, TArg3>(ConstructorInfo constructor)
         {
             Type type = typeof(TTypeToConvert);
             Debug.Assert(!type.IsAbstract);
@@ -114,12 +114,12 @@ namespace System.Text.Json.Serialization
             ParameterInfo[] parameters = constructor.GetParameters();
             int parameterCount = parameters.Length;
 
-            Debug.Assert(parameterCount < 8);
+            Debug.Assert(parameterCount <= JsonConstants.UnboxedParameterCountThreshold);
 
             var dynamicMethod = new DynamicMethod(
                 ConstructorInfo.ConstructorName,
                 type,
-                new[] { typeof(TArg0), typeof(TArg1), typeof(TArg2), typeof(TArg3), typeof(TArg4), typeof(TArg5), typeof(TArg6) },
+                new[] { typeof(TArg0), typeof(TArg1), typeof(TArg2), typeof(TArg3) },
                 typeof(ReflectionEmitMemberAccessor).Module,
                 skipVisibility: true);
 
@@ -141,13 +141,8 @@ namespace System.Text.Json.Serialization
                     case 3:
                         generator.Emit(OpCodes.Ldarg_3);
                         break;
-                    case 4:
-                    case 5:
-                    case 6:
-                        generator.Emit(OpCodes.Ldarg_S, index);
-                        break;
                     default:
-                        Debug.Fail("We shouldn't be here if there are more than 7 parameters.");
+                        Debug.Fail("We shouldn't be here if there are more than 4 parameters.");
                         break;
                 }
             }
@@ -155,9 +150,9 @@ namespace System.Text.Json.Serialization
             generator.Emit(OpCodes.Newobj, constructor);
             generator.Emit(OpCodes.Ret);
 
-            return (JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>)
+            return (JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3>)
                 dynamicMethod.CreateDelegate(
-                    typeof(JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>));
+                    typeof(JsonClassInfo.ParameterizedConstructorDelegate<TTypeToConvert, TArg0, TArg1, TArg2, TArg3>));
         }
 
         public override Action<TCollection, object?> CreateAddMethodDelegate<TCollection>()
