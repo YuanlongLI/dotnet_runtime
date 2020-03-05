@@ -15,13 +15,13 @@ namespace System.Text.Json.Serialization.Converters
     internal abstract partial class ObjectWithParameterizedConstructorConverter<TypeToConvert> : JsonObjectConverter<TypeToConvert>
     {
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
-        private volatile Dictionary<string, JsonPropertyInfo>? _propertyCache;
+        protected volatile Dictionary<string, JsonPropertyInfo> PropertyCache = null!;
 
         // All of the serializable properties on a POCO including the optional extension property.
         // Used for performance during serialization instead of 'PropertyCache' above.
         private volatile JsonPropertyInfo[]? _propertyCacheArray;
 
-        private JsonPropertyInfo? _dataExtensionProperty;
+        protected JsonPropertyInfo? DataExtensionProperty;
 
         protected volatile Dictionary<string, JsonParameterInfo> ParameterCache = null!;
 
@@ -171,30 +171,30 @@ namespace System.Text.Json.Serialization.Converters
             if (JsonClassInfo.TryDetermineExtensionDataProperty(base.TypeToConvert, propertyCache, options, out dataExtensionProperty))
             {
                 Debug.Assert(dataExtensionProperty != null);
-                _dataExtensionProperty = dataExtensionProperty;
+                DataExtensionProperty = dataExtensionProperty;
 
                 // Remove from propertyCache since it is handled independently.
-                propertyCache.Remove(_dataExtensionProperty.NameAsString!);
+                propertyCache.Remove(DataExtensionProperty.NameAsString!);
 
                 int propertyCount = propertyCache.Count + parameterMatches.Count;
                 cacheArray = new JsonPropertyInfo[propertyCount + 1];
 
                 // Set the last element to the extension property.
-                cacheArray[propertyCount] = _dataExtensionProperty;
+                cacheArray[propertyCount] = DataExtensionProperty;
             }
             else if (JsonClassInfo.TryDetermineExtensionDataProperty(base.TypeToConvert, parameterMatches, options, out dataExtensionProperty))
             {
                 Debug.Assert(dataExtensionProperty != null);
-                _dataExtensionProperty = dataExtensionProperty;
+                DataExtensionProperty = dataExtensionProperty;
 
-                // Remove from propertyCache since it is handled independently.
-                ParameterCache.Remove(_dataExtensionProperty.NameAsString!);
+                // Remove from parameterCache since it is handled independently.
+                ParameterCache.Remove(DataExtensionProperty.NameAsString!);
 
                 int propertyCount = propertyCache.Count + parameterMatches.Count;
                 cacheArray = new JsonPropertyInfo[propertyCount + 1];
 
                 // Set the last element to the extension property.
-                cacheArray[propertyCount] = _dataExtensionProperty;
+                cacheArray[propertyCount] = DataExtensionProperty;
             }
             else
             {
@@ -209,7 +209,7 @@ namespace System.Text.Json.Serialization.Converters
                 propertyCache.Add(pair.Key, pair.Value);
             }
 
-            _propertyCache = propertyCache;
+            PropertyCache = propertyCache;
             _propertyCacheArray = cacheArray;
         }
 

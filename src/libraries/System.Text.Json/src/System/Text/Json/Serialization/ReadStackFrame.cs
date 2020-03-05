@@ -55,6 +55,15 @@ namespace System.Text.Json
         // Used when there are more than 7 constructor parameters.
         public object[]? ConstructorArgumentsArray;
 
+        // Cache for properties that are found before an object with a parameterized constructor is created.
+        public ValueTuple<JsonPropertyInfo, object?>[]? ObjectProperties;
+
+        // Number of properties stored in the above cache.
+        public int CachedPropertyCount;
+
+        // Extension data instance for fast-path objects. Assume dictionary is not a struct so we can (un)box.
+        public object? ExtensionData;
+
         // The position of the first object property.
         // We resume from the property on the second pass.
         public int FirstPropertyIndex;
