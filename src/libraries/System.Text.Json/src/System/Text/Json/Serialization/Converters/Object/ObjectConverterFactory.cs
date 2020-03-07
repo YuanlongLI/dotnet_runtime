@@ -39,34 +39,34 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                int parameterCount = parameters.Length;
+                //int parameterCount = parameters.Length;
 
-                if ((parameterCount <= JsonConstants.UnboxedParameterCountThreshold)
-                    && (GetNumberOfValueTypeProperties(typeToConvert, constructor) < JsonConstants.ValueTypePropertyCountThreshold))
-                {
-                    Type placeHolderType = typeof(object);
-                    Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
+                //if ((parameterCount <= JsonConstants.UnboxedParameterCountThreshold)
+                //    && (GetNumberOfValueTypeProperties(typeToConvert, constructor) < JsonConstants.ValueTypePropertyCountThreshold))
+                //{
+                //    Type placeHolderType = typeof(object);
+                //    Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
 
-                    typeArguments[0] = typeToConvert;
-                    for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
-                    {
-                        if (i < parameterCount)
-                        {
-                            typeArguments[i + 1] = parameters[i].ParameterType;
-                        }
-                        else
-                        {
-                            // Use placeholder arguments if there are less args than the threshold.
-                            typeArguments[i + 1] = placeHolderType;
-                        }
-                    }
+                //    typeArguments[0] = typeToConvert;
+                //    for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
+                //    {
+                //        if (i < parameterCount)
+                //        {
+                //            typeArguments[i + 1] = parameters[i].ParameterType;
+                //        }
+                //        else
+                //        {
+                //            // Use placeholder arguments if there are less args than the threshold.
+                //            typeArguments[i + 1] = placeHolderType;
+                //        }
+                //    }
 
-                    converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
-                }
-                else
-                {
+                //    converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
+                //}
+                //else
+                //{
                     converterType = typeof(LargeObjectWithParameterizedConstructorConverter<>).MakeGenericType(typeToConvert);
-                }
+                //}
             }
 
             converter = (JsonConverter)Activator.CreateInstance(
