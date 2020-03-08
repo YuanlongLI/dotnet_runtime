@@ -18,17 +18,11 @@ namespace System.Text.Json.Serialization.Converters
     {
         private JsonClassInfo.ParameterizedConstructorDelegate<TypeToConvert, TArg0, TArg1, TArg2, TArg3>? _createObject;
 
-        // Whether or not the extension data is typeof(object) or typoef(JsonElement).
-        private bool _extensionDataIsObject;
-
         internal override void Initialize(ConstructorInfo constructor, JsonSerializerOptions options)
         {
             base.Initialize(constructor, options);
 
             _createObject = options.MemberAccessorStrategy.CreateParameterizedConstructor<TypeToConvert, TArg0, TArg1, TArg2, TArg3>(constructor)!;
-            _extensionDataIsObject =
-                DataExtensionProperty != null &&
-                typeof(IDictionary<string, object>).IsAssignableFrom(DataExtensionProperty.RuntimeClassInfo.Type);
         }
 
         protected override object CreateObject(ref ReadStack state)
@@ -40,7 +34,6 @@ namespace System.Text.Json.Serialization.Converters
         protected override void ReadAndCacheConstructorArgument(ref ReadStack state, ref Utf8JsonReader reader, JsonParameterInfo jsonParameterInfo, JsonSerializerOptions options)
         {
             Debug.Assert(state.Current.ConstructorArguments != null);
-            Debug.Assert(state.Current.ConstructorArgumentsArray == null);
 
             var argCache = (ArgumentCache<TArg0, TArg1, TArg2, TArg3>)state.Current.ConstructorArguments;
 
@@ -68,7 +61,7 @@ namespace System.Text.Json.Serialization.Converters
             }
         }
 
-        protected override void InitializeConstructorArgumentCache(ref ReadStackFrame frame, JsonSerializerOptions options)
+        protected override void InitializeConstructorArgumentCaches(ref ReadStackFrame frame, JsonSerializerOptions options)
         {
             var argCache = new ArgumentCache<TArg0, TArg1, TArg2, TArg3>();
 
@@ -97,9 +90,6 @@ namespace System.Text.Json.Serialization.Converters
             }
 
             frame.ConstructorArguments = argCache;
-
-            frame.ConstructorArgumentState = ArrayPool<bool>.Shared.Rent(ParameterCount);
-            frame.JsonPropertyKindIndicator = ArrayPool<bool>.Shared.Rent(PropertyNameCountCacheThreshold);
         }
     }
 }

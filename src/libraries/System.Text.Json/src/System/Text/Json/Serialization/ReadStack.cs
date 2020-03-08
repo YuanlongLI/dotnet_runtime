@@ -107,8 +107,7 @@ namespace System.Text.Json
                         }
                         else
                         {
-                            Debug.Assert(Current.JsonConstructorParameterInfo != null);
-                            jsonClassInfo = Current.JsonConstructorParameterInfo.RuntimeClassInfo;
+                            jsonClassInfo = Current.JsonConstructorParameterInfo!.RuntimeClassInfo;
                         }
                     }
                     else if ((Current.JsonClassInfo.ClassType & (ClassType.Value | ClassType.NewValue)) != 0)

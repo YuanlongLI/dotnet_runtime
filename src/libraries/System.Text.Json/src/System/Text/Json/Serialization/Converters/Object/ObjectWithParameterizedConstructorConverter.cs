@@ -16,13 +16,16 @@ namespace System.Text.Json.Serialization.Converters
     internal abstract partial class ObjectWithParameterizedConstructorConverter<TypeToConvert> : JsonObjectConverter<TypeToConvert>
     {
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
-        protected volatile Dictionary<string, JsonPropertyInfo> PropertyCache = null!;
+        protected volatile Dictionary<string, JsonPropertyInfo> _propertyCache = null!;
 
         // All of the serializable properties on a POCO including the optional extension property.
         // Used for performance during serialization instead of 'PropertyCache' above.
         private volatile JsonPropertyInfo[]? _propertyCacheArray;
 
         protected JsonPropertyInfo? DataExtensionProperty;
+
+        // Whether the extension data is typeof(object) or typoef(JsonElement).
+        private bool DataExtensionIsObject;
 
         protected volatile Dictionary<string, JsonParameterInfo> ParameterCache = null!;
 
@@ -55,12 +58,70 @@ namespace System.Text.Json.Serialization.Converters
                 // Set state.Current.JsonPropertyInfo to null so there's no conflict on state.Push()
                 state.Current.JsonPropertyInfo = null!;
 
-                InitializeConstructorArgumentCache(ref state.Current, options);
+                InitializeConstructorArgumentCaches(ref state.Current, options);
+
+                ReadOnlySpan<byte> originalSpan = reader.OriginalSpan;
 
                 // Read until we've parsed all constructor arguments or hit the end token.
                 ReadConstructorArguments(ref reader, options, ref state);
 
                 obj = CreateObject(ref state);
+
+                if (state.Current.FoundPropertyCount > 0)
+                {
+                    Utf8JsonReader tempReader;
+                    // Set the properties we've parsed so far.
+                    for (int i = 0; i < state.Current.FoundPropertyCount; i++)
+                    {
+                        JsonPropertyInfo jsonPropertyInfo = state.Current.FoundProperties![i].Item1;
+                        long resumptionByteIndex = state.Current.FoundProperties[i].Item3;
+                        byte[]? propertyNameArray = state.Current.FoundProperties[i].Item4;
+
+                        tempReader = new Utf8JsonReader(
+                            originalSpan.Slice(checked((int)resumptionByteIndex)),
+                            isFinalBlock: true,
+                            state: state.Current.FoundProperties[i].Item2);
+
+                        Debug.Assert(tempReader.TokenType == JsonTokenType.PropertyName);
+                        tempReader.Read();
+
+                        if (propertyNameArray == null)
+                        {
+                            propertyNameArray = jsonPropertyInfo.JsonPropertyName;
+                        }
+                        else
+                        {
+                            Debug.Assert(options.PropertyNameCaseInsensitive);
+                            state.Current.JsonPropertyName = propertyNameArray;
+                        }
+
+                        // Support JsonException.Path.
+                        Debug.Assert(
+                            jsonPropertyInfo.JsonPropertyName == null ||
+                            options.PropertyNameCaseInsensitive ||
+                            ((ReadOnlySpan<byte>)propertyNameArray!).SequenceEqual(jsonPropertyInfo.JsonPropertyName));
+
+                        state.Current.JsonPropertyInfo = jsonPropertyInfo;
+
+                        jsonPropertyInfo.ReadJsonAndSetMember(obj, ref state, ref tempReader);
+                    }
+
+                    ArrayPool<ValueTuple<JsonPropertyInfo, JsonReaderState, long, byte[]?>>.Shared.Return(
+                        state.Current.FoundProperties!,
+                        clearArray: true);
+                }
+#if DEBUG
+                else
+                {
+                    Debug.Assert(state.Current.FoundProperties == null);
+                }
+#endif
+
+                // Set extension data, if any.
+                if (state.Current.DataExtension != null)
+                {
+                    DataExtensionProperty!.SetValueAsObject(obj, state.Current.DataExtension);
+                }
 
                 // Check if we are trying to build the sorted property cache.
                 if (state.Current.ParameterRefCache != null)
@@ -74,22 +135,22 @@ namespace System.Text.Json.Serialization.Converters
                     UpdateSortedPropertyCache(ref state.Current);
                 }
 
-                if (reader.TokenType != JsonTokenType.EndObject)
-                {
-                    Debug.Assert(reader.TokenType == JsonTokenType.PropertyName);
+                //if (reader.TokenType != JsonTokenType.EndObject)
+                //{
+                //    Debug.Assert(reader.TokenType == JsonTokenType.PropertyName);
 
-                    // Read the rest of the payload and populate members.
-                    ReadPropertiesAndPopulateMembers(obj, ref reader, options, ref state);
+                //    // Read the rest of the payload and populate members.
+                //    ReadPropertiesAndPopulateMembers(obj, ref reader, options, ref state);
 
-                    // Check if we are trying to build the sorted property cache.
-                    if (state.Current.PropertyRefCache != null)
-                    {
-                        UpdateSortedPropertyCache(ref state.Current);
-                    }
-                }
+                //    // Check if we are trying to build the sorted property cache.
+                //    if (state.Current.PropertyRefCache != null)
+                //    {
+                //        UpdateSortedPropertyCache(ref state.Current);
+                //    }
+                //}
 
-                Debug.Assert(state.Current.JsonPropertyKindIndicator != null);
-                ArrayPool<bool>.Shared.Return(state.Current.JsonPropertyKindIndicator, clearArray: true);
+                //Debug.Assert(state.Current.JsonPropertyKindIndicator != null);
+                //ArrayPool<bool>.Shared.Return(state.Current.JsonPropertyKindIndicator, clearArray: true);
             }
             //else
             //{
@@ -583,6 +644,11 @@ namespace System.Text.Json.Serialization.Converters
                 cacheArray = new JsonPropertyInfo[propertyCache.Count + parameterMatches.Count];
             }
 
+            if (DataExtensionProperty != null)
+            {
+                DataExtensionIsObject = typeof(IDictionary<string, object>).IsAssignableFrom(DataExtensionProperty.RuntimeClassInfo.Type);
+            }
+
             parameterMatches.Values.CopyTo(cacheArray, 0);
             propertyCache.Values.CopyTo(cacheArray, parameterMatches.Count);
 
@@ -591,7 +657,7 @@ namespace System.Text.Json.Serialization.Converters
                 propertyCache.Add(pair.Key, pair.Value);
             }
 
-            PropertyCache = propertyCache;
+            _propertyCache = propertyCache;
             _propertyCacheArray = cacheArray;
         }
 

@@ -717,24 +717,6 @@ namespace System.Text.Json.Serialization.Tests
         public static readonly string s_json_flipped = $"{{{s_partialJson2},{s_partialJson1}}}";
 
         private const string s_partialJson1 =
-            @"""MyInt16ThreeDimensionList"" : [[[11, 12],[13, 14]],[[21,22],[23,24]]]," +
-            @"""MyStringList"" : [""Hello""]," +
-            @"""MyStringIEnumerable"" : [""Hello""]," +
-            @"""MyStringIList"" : [""Hello""]," +
-            @"""MyStringICollection"" : [""Hello""]," +
-            @"""MyStringIEnumerableT"" : [""Hello""]," +
-            @"""MyStringIReadOnlyListT"" : [""Hello""]," +
-            @"""MyStringISetT"" : [""Hello""]," +
-            @"""MyStringToStringKeyValuePair"" : {""Key"" : ""myKey"", ""Value"" : ""myValue""}," +
-            @"""MyStringToStringIDict"" : {""key"" : ""value""}," +
-            @"""MyStringToStringGenericDict"" : {""key"" : ""value""}," +
-            @"""MyStringToStringGenericIDict"" : {""key"" : ""value""}," +
-            @"""MyStringToStringIImmutableDict"" : {""key"" : ""value""}," +
-            @"""MyStringImmutablQueueT"" : [""Hello""]," +
-            @"""MyStringImmutableSortedSetT"" : [""Hello""]," +
-            @"""MyListOfNullString"" : [null]";
-
-        private const string s_partialJson2 =
             @"""MyByte"" : 7," +
             @"""MySByte"" : 8," +
             @"""MyChar"" : ""a""," +
@@ -753,6 +735,24 @@ namespace System.Text.Json.Serialization.Tests
             @"""MyUInt64Enum"" : 18446744073709551615," +
             @"""MySimpleStruct"" : {""One"" : 11, ""Two"" : 1.9999, ""Three"" : 33}," +
             @"""MyInt16ThreeDimensionArray"" : [[[11, 12],[13, 14]],[[21,22],[23,24]]]";
+
+        private const string s_partialJson2 =
+            @"""MyInt16ThreeDimensionList"" : [[[11, 12],[13, 14]],[[21,22],[23,24]]]," +
+            @"""MyStringList"" : [""Hello""]," +
+            @"""MyStringIEnumerable"" : [""Hello""]," +
+            @"""MyStringIList"" : [""Hello""]," +
+            @"""MyStringICollection"" : [""Hello""]," +
+            @"""MyStringIEnumerableT"" : [""Hello""]," +
+            @"""MyStringIReadOnlyListT"" : [""Hello""]," +
+            @"""MyStringISetT"" : [""Hello""]," +
+            @"""MyStringToStringKeyValuePair"" : {""Key"" : ""myKey"", ""Value"" : ""myValue""}," +
+            @"""MyStringToStringIDict"" : {""key"" : ""value""}," +
+            @"""MyStringToStringGenericDict"" : {""key"" : ""value""}," +
+            @"""MyStringToStringGenericIDict"" : {""key"" : ""value""}," +
+            @"""MyStringToStringIImmutableDict"" : {""key"" : ""value""}," +
+            @"""MyStringImmutablQueueT"" : [""Hello""]," +
+            @"""MyStringImmutableSortedSetT"" : [""Hello""]," +
+            @"""MyListOfNullString"" : [null]";
 
         public void Initialize() { }
 

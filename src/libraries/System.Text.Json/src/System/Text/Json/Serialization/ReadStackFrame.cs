@@ -44,25 +44,16 @@ namespace System.Text.Json
         public int ConstructorParameterIndex;
         public List<ParameterRef>? ParameterRefCache;
 
-        // Whether or not we have seen the JSON for a constructor parameter.
-        public bool[]? ConstructorArgumentState;
-
-        // Cache for parsed constructor arguments that avoids boxing the arguments.
-        // Used when there are at most 7 constructor parameters.
+        // Cache for parsed constructor arguments.
         public object? ConstructorArguments;
 
-        // Cache for parsed constructor arguments that boxes the arguments.
-        // Used when there are more than 7 constructor parameters.
-        public object[]? ConstructorArgumentsArray;
+        // Data extension for objects with parameterized ctors and an extension data property.
+        public object? DataExtension;
 
-        // The position of the first object property.
-        // We resume from the property on the second pass.
-        public int FirstPropertyIndex;
+        // When deserializing objects with extension data, the properties we found on the first pass.
+        public ValueTuple<JsonPropertyInfo, JsonReaderState, long, byte[]?>[]? FoundProperties;
 
-        // The kind of properties we found in the JSON.
-        // 0 = constructor parameter.
-        // PropertyNameKey = object property.
-        public bool[]? JsonPropertyKindIndicator;
+        public int FoundPropertyCount;
 
         public void EndConstructorParameter()
         {
@@ -121,11 +112,10 @@ namespace System.Text.Json
             AddMethodDelegate = null;
             ConstructorParameterIndex = 0;
             ConstructorArguments = null;
-            ConstructorArgumentsArray = null;
-            ConstructorArgumentState = null;
-            FirstPropertyIndex = 0;
+            DataExtension = null;
+            FoundProperties = null;
+            FoundPropertyCount = 0;
             JsonClassInfo = null!;
-            JsonPropertyKindIndicator = null;
             ObjectState = StackFrameObjectState.None;
             OriginalDepth = 0;
             OriginalTokenType = JsonTokenType.None;

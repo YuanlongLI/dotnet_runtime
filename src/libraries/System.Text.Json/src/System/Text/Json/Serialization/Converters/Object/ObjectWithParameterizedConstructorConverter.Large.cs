@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Buffers;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace System.Text.Json.Serialization.Converters
@@ -26,12 +25,9 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void ReadAndCacheConstructorArgument(ref ReadStack state, ref Utf8JsonReader reader, JsonParameterInfo jsonParameterInfo, JsonSerializerOptions options)
         {
-            Debug.Assert(state.Current.ConstructorArguments == null);
-
             jsonParameterInfo.ReadJson(ref state, ref reader, options, out object? arg0);
 
-            Debug.Assert(state.Current.ConstructorArgumentsArray != null);
-            state.Current.ConstructorArgumentsArray[jsonParameterInfo.Position] = arg0!;
+            ((object[])state.Current.ConstructorArguments!)[jsonParameterInfo.Position] = arg0!;
         }
 
         protected override object CreateObject(ref ReadStack state)
@@ -42,24 +38,23 @@ namespace System.Text.Json.Serialization.Converters
                 throw new NotSupportedException();
             }
 
-            object obj = _createObject(state.Current.ConstructorArgumentsArray!)!;
+            object[] arguments = (object[])state.Current.ConstructorArguments!;
 
-            ArrayPool<object>.Shared.Return(state.Current.ConstructorArgumentsArray!, clearArray: true);
-            ArrayPool<bool>.Shared.Return(state.Current.ConstructorArgumentState!, clearArray: true);
+            object obj = _createObject(arguments)!;
+
+            ArrayPool<object>.Shared.Return(arguments, clearArray: true);
             return obj;
         }
 
-        protected override void InitializeConstructorArgumentCache(ref ReadStackFrame frame, JsonSerializerOptions options)
+        protected override void InitializeConstructorArgumentCaches(ref ReadStackFrame frame, JsonSerializerOptions options)
         {
-            frame.ConstructorArgumentsArray = ArrayPool<object>.Shared.Rent(ParameterCount);
-
+            object[] arguments = ArrayPool<object>.Shared.Rent(ParameterCount);
             foreach (JsonParameterInfo parameterInfo in ParameterCache.Values)
             {
-                frame.ConstructorArgumentsArray[parameterInfo.Position] = parameterInfo.DefaultValue!;
+                arguments[parameterInfo.Position] = parameterInfo.DefaultValue!;
             }
 
-            frame.ConstructorArgumentState = ArrayPool<bool>.Shared.Rent(ParameterCount);
-            frame.JsonPropertyKindIndicator = ArrayPool<bool>.Shared.Rent(PropertyNameCountCacheThreshold);
+            frame.ConstructorArguments = arguments;
         }
     }
 }
