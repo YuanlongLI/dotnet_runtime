@@ -28,6 +28,7 @@ namespace System.Text.Json.Serialization.Tests
         public static void MatchJsonPropertyToConstructorParameters()
         {
             JsonSerializer.Deserialize<Point_2D>(@"{""X"":1,""Y"":2}");
+            JsonSerializer.Deserialize<Point_2D>(@"{""X"":1,""Y"":2}");
 
             //for (int i = 0; i < 10_000; i++)
             //{

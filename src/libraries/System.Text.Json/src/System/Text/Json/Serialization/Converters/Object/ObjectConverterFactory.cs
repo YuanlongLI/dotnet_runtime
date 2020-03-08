@@ -39,35 +39,34 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                //int parameterCount = parameters.Length;
+                int parameterCount = parameters.Length;
 
-                //if ((parameterCount <= JsonConstants.UnboxedParameterCountThreshold)
-                //    && (GetNumberOfValueTypeProperties(typeToConvert, constructor) < JsonConstants.ValueTypePropertyCountThreshold))
-                //{
-                //    Type placeHolderType = typeof(object);
-                //    Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
+                if (parameterCount <= JsonConstants.UnboxedParameterCountThreshold)
+                {
+                    Type placeHolderType = typeof(object);
+                    Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
 
-                //    typeArguments[0] = typeToConvert;
-                //    for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
-                //    {
-                //        if (i < parameterCount)
-                //        {
-                //            typeArguments[i + 1] = parameters[i].ParameterType;
-                //        }
-                //        else
-                //        {
-                //            // Use placeholder arguments if there are less args than the threshold.
-                //            typeArguments[i + 1] = placeHolderType;
-                //        }
-                //    }
+                    typeArguments[0] = typeToConvert;
+                    for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
+                    {
+                        if (i < parameterCount)
+                        {
+                            typeArguments[i + 1] = parameters[i].ParameterType;
+                        }
+                        else
+                        {
+                            // Use placeholder arguments if there are less args than the threshold.
+                            typeArguments[i + 1] = placeHolderType;
+                        }
+                    }
 
-                //    converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
-                //}
-                //else
-                //{
+                    converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
+                }
+                else
+                {
                     converterType = typeof(LargeObjectWithParameterizedConstructorConverter<>).MakeGenericType(typeToConvert);
-                //}
-            }
+                }
+        }
 
             converter = (JsonConverter)Activator.CreateInstance(
                     converterType,
@@ -113,37 +112,6 @@ namespace System.Text.Json.Serialization.Converters
             }
 
             return ctorWithAttribute ?? parameterlessCtor;
-        }
-
-        // Gives a naive estimate of the number of value type properties we'll deserialize directly into.
-        // We'll box them if we do deserialization in one pass and temporarily cache properties as we
-        // parse them while searching for
-        // We only care about this for objects that have parameterized constructors.
-        private int GetNumberOfValueTypeProperties(Type type, ConstructorInfo constructor)
-        {
-            PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            ParameterInfo[] parameters = constructor.GetParameters();
-
-            int numValueTypes = 0;
-
-            foreach (PropertyInfo property in properties)
-            {
-                if (property.GetIndexParameters().Length == 0 && property.PropertyType.IsValueType)
-                {
-                    numValueTypes++;
-                }
-            }
-
-            foreach (ParameterInfo parameter in parameters)
-            {
-                if (parameter.ParameterType.IsValueType)
-                {
-                    numValueTypes--;
-                }
-            }
-
-            // A negative return value is fine here.
-            return numValueTypes;
         }
     }
 }

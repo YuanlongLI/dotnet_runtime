@@ -134,23 +134,6 @@ namespace System.Text.Json.Serialization.Converters
                 {
                     UpdateSortedPropertyCache(ref state.Current);
                 }
-
-                //if (reader.TokenType != JsonTokenType.EndObject)
-                //{
-                //    Debug.Assert(reader.TokenType == JsonTokenType.PropertyName);
-
-                //    // Read the rest of the payload and populate members.
-                //    ReadPropertiesAndPopulateMembers(obj, ref reader, options, ref state);
-
-                //    // Check if we are trying to build the sorted property cache.
-                //    if (state.Current.PropertyRefCache != null)
-                //    {
-                //        UpdateSortedPropertyCache(ref state.Current);
-                //    }
-                //}
-
-                //Debug.Assert(state.Current.JsonPropertyKindIndicator != null);
-                //ArrayPool<bool>.Shared.Return(state.Current.JsonPropertyKindIndicator, clearArray: true);
             }
             //else
             //{
