@@ -13,6 +13,8 @@ namespace System.Text.Json
     {
         private Type _runtimePropertyType = null!;
 
+        public abstract JsonConverter ConverterBase { get; }
+
         // The default value of the parameter. This is `DefaultValue` of the `ParameterInfo`, if specified, or the CLR `default` for the `ParameterType`.
         public object? DefaultValue { get; protected set; }
 

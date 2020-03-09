@@ -27,21 +27,13 @@ namespace System.Text.Json.Serialization.Tests
         [Fact]
         public static void MatchJsonPropertyToConstructorParameters()
         {
-            JsonSerializer.Deserialize<Point_2D>(@"{""X"":1,""Y"":2}");
-            JsonSerializer.Deserialize<Point_2D>(@"{""X"":1,""Y"":2}");
+            Point_2D point = JsonSerializer.Deserialize<Point_2D>(@"{""X"":1,""Y"":2}");
+            Assert.Equal(1, point.X);
+            Assert.Equal(2, point.Y);
 
-            //for (int i = 0; i < 10_000; i++)
-            //{
-            //    JsonSerializer.Deserialize<Point_2D>(@"{""X"":1,""Y"":2}");
-            //}
-
-            //Point_2D point = JsonSerializer.Deserialize<Point_2D>(@"{""X"":1,""Y"":2}");
-            //Assert.Equal(1, point.X);
-            //Assert.Equal(2, point.Y);
-
-            //point = JsonSerializer.Deserialize<Point_2D>(@"{""Y"":2,""X"":1}");
-            //Assert.Equal(1, point.X);
-            //Assert.Equal(2, point.Y);
+            point = JsonSerializer.Deserialize<Point_2D>(@"{""Y"":2,""X"":1}");
+            Assert.Equal(1, point.X);
+            Assert.Equal(2, point.Y);
         }
 
         [Fact]
@@ -224,7 +216,7 @@ namespace System.Text.Json.Serialization.Tests
         }
 
         [Fact]
-        public static void At_Prefix_DefaultValue()
+        public static void At_Symbol_As_ParameterNamePrefix()
         {
             ClassWrapper_For_Int_String obj = JsonSerializer.Deserialize<ClassWrapper_For_Int_String>(@"{""Int"":1,""String"":""1""}");
             Assert.Equal(1, obj.Int);
@@ -232,7 +224,7 @@ namespace System.Text.Json.Serialization.Tests
         }
 
         [Fact]
-        public static void At_Prefix_NoMatch_UseDefaultValues()
+        public static void At_Symbol_As_ParameterNamePrefix_UseDefaultValues()
         {
             ClassWrapper_For_Int_String obj = JsonSerializer.Deserialize<ClassWrapper_For_Int_String>(@"{""@Int"":1,""@String"":""1""}");
             Assert.Equal(0, obj.Int);
@@ -272,89 +264,17 @@ namespace System.Text.Json.Serialization.Tests
         }
 
         [Theory]
-        [InlineData(typeof(Person_Class))]
-        //[InlineData(typeof(Person_Struct))]
-        public static void OtherPropertiesAreSet(Type type)
+        [MemberData(nameof(PersonTestData))]
+        public static void OtherPropertiesAreSet(Type type, string json)
         {
-            string json = @"{
-                ""FirstName"":""John"",
-                ""LastName"":""Doe"",
-                ""EmailAddress"":""johndoe@live.com"",
-                ""Id"":""f2c92fcc-459f-4287-90b6-a7cbd82aeb0e"",
-                ""Age"":24,
-                ""Point2D"":{""X"":1,""Y"":2},
-                ""ReadOnlyPoint2D"":{""X"":1,""Y"":2},
-                ""Point2DWithExtDataClass"":{""X"":1,""Y"":2,""b"":3},
-                ""ReadOnlyPoint2DWithExtDataClass"":{""X"":1,""Y"":2,""b"":3},
-                ""Point3DStruct"":{""X"":1,""Y"":2,""Z"":3},
-                ""ReadOnlyPoint3DStruct"":{""X"":1,""Y"":2,""Z"":3},
-                ""Point2DWithExtData"":{""X"":1,""Y"":2,""b"":3},
-                ""ReadOnlyPoint2DWithExtData"":{""X"":1,""Y"":2,""b"":3}
-                }";
-
             object person = JsonSerializer.Deserialize(json, type);
+            ((ITestClass)person).Verify();
+        }
 
-            Assert.Equal("John", (string)type.GetProperty("FirstName").GetValue(person)!);
-            Assert.Equal("Doe", (string)type.GetProperty("LastName").GetValue(person)!);
-            Assert.Equal("johndoe@live.com", (string)type.GetProperty("EmailAddress").GetValue(person)!);
-            Assert.Equal("f2c92fcc-459f-4287-90b6-a7cbd82aeb0e", ((Guid)type.GetProperty("Id").GetValue(person)!).ToString());
-            Assert.Equal(24, (int)type.GetProperty("Age").GetValue(person)!);
-
-            string serialized = JsonSerializer.Serialize(person);
-            Assert.Contains(@"""Point2D"":{", serialized);
-            Assert.Contains(@"""ReadOnlyPoint2D"":{", serialized);
-            Assert.Contains(@"""Point2DWithExtDataClass"":{", serialized);
-            Assert.Contains(@"""ReadOnlyPoint2DWithExtDataClass"":{", serialized);
-            Assert.Contains(@"""Point3DStruct"":{", serialized);
-            Assert.Contains(@"""ReadOnlyPoint3DStruct"":{", serialized);
-            Assert.Contains(@"""Point2DWithExtData"":{", serialized);
-            Assert.Contains(@"""ReadOnlyPoint2DWithExtData"":{", serialized);
-
-            Point_2D point2D = (Point_2D)type.GetProperty("Point2D").GetValue(person)!;
-            serialized = JsonSerializer.Serialize(point2D);
-            Assert.Contains(@"""X"":1", serialized);
-            Assert.Contains(@"""Y"":2", serialized);
-
-            Point_2D readOnlyPoint2D = (Point_2D)type.GetProperty("ReadOnlyPoint2D").GetValue(person)!;
-            serialized = JsonSerializer.Serialize(readOnlyPoint2D);
-            Assert.Contains(@"""X"":1", serialized);
-            Assert.Contains(@"""Y"":2", serialized);
-
-            Point_2D_With_ExtData_Class point2DWithExtDataClass = (Point_2D_With_ExtData_Class)type.GetProperty("Point2DWithExtDataClass").GetValue(person)!;
-            serialized = JsonSerializer.Serialize(point2DWithExtDataClass);
-            Assert.Contains(@"""X"":1", serialized);
-            Assert.Contains(@"""Y"":2", serialized);
-            Assert.Contains(@"""b"":3", serialized);
-
-            Point_2D_With_ExtData_Class readOnlyPoint2DWithExtDataClass = (Point_2D_With_ExtData_Class)type.GetProperty("ReadOnlyPoint2DWithExtDataClass").GetValue(person)!;
-            serialized = JsonSerializer.Serialize(readOnlyPoint2DWithExtDataClass);
-            Assert.Contains(@"""X"":1", serialized);
-            Assert.Contains(@"""Y"":2", serialized);
-            Assert.Contains(@"""b"":3", serialized);
-
-            Point_3D_Struct point3DStruct = (Point_3D_Struct)type.GetProperty("Point3DStruct").GetValue(person)!;
-            serialized = JsonSerializer.Serialize(point3DStruct);
-            Assert.Contains(@"""X"":1", serialized);
-            Assert.Contains(@"""Y"":2", serialized);
-            Assert.Contains(@"""Z"":3", serialized);
-
-            Point_3D_Struct readOnlyPoint3DStruct = (Point_3D_Struct)type.GetProperty("ReadOnlyPoint3DStruct").GetValue(person)!;
-            serialized = JsonSerializer.Serialize(readOnlyPoint3DStruct);
-            Assert.Contains(@"""X"":1", serialized);
-            Assert.Contains(@"""Y"":2", serialized);
-            Assert.Contains(@"""Z"":3", serialized);
-
-            Point_2D_With_ExtData point2DWithExtData = (Point_2D_With_ExtData)type.GetProperty("Point2DWithExtData").GetValue(person)!;
-            serialized = JsonSerializer.Serialize(point2DWithExtData);
-            Assert.Contains(@"""X"":1", serialized);
-            Assert.Contains(@"""Y"":2", serialized);
-            Assert.Contains(@"""b"":3", serialized);
-
-            Point_2D_With_ExtData readOnlyPoint2DWithExtData = (Point_2D_With_ExtData)type.GetProperty("ReadOnlyPoint2DWithExtData").GetValue(person)!;
-            serialized = JsonSerializer.Serialize(readOnlyPoint2DWithExtData);
-            Assert.Contains(@"""X"":1", serialized);
-            Assert.Contains(@"""Y"":2", serialized);
-            Assert.Contains(@"""b"":3", serialized);
+        private static IEnumerable<object[]> PersonTestData()
+        {
+            yield return new object[] { typeof(Person_Class), Person_Class.s_json };
+            yield return new object[] { typeof(Person_Struct), Person_Struct.s_json };
         }
 
         [Fact]
@@ -568,14 +488,8 @@ namespace System.Text.Json.Serialization.Tests
 
             string json = JsonSerializer.Serialize(point);
 
-
-            for (int i = 0; i < 10_000; i++)
-            {
-                JsonSerializer.Deserialize<Parameterized_ClassWithPrimitives_3Args>(json);
-            }
-
-            //JsonSerializer.Deserialize<Parameterized_ClassWithPrimitives_3Args>(json);
-            //JsonSerializer.Deserialize<Parameterized_ClassWithPrimitives_3Args>(json);
+            JsonSerializer.Deserialize<Parameterized_ClassWithPrimitives_3Args>(json);
+            JsonSerializer.Deserialize<Parameterized_ClassWithPrimitives_3Args>(json);
         }
 
         [Fact]
@@ -861,11 +775,11 @@ namespace System.Text.Json.Serialization.Tests
                 }";
 
             Parameterized_Person person = JsonSerializer.Deserialize<Parameterized_Person>(json);
-            Assert.Equal("Jet", person.FirstName); // Jet
-            Assert.Equal("Doe", person.LastName); // Doe
-            Assert.Equal("63cf821d-fd47-4782-8345-576d9228a534", person.Id.ToString()); // 270bb22b-4816-4bd9-9acd-8ec5b1a896d3
-            Assert.Equal("jetdoe@outlook.com", person.ExtensionData["EmailAddress"].GetString()); // jetdoe@outlook.com
-            Assert.False(person.ExtensionData.ContainsKey("Id")); // False
+            Assert.Equal("Jet", person.FirstName);
+            Assert.Equal("Doe", person.LastName);
+            Assert.Equal("63cf821d-fd47-4782-8345-576d9228a534", person.Id.ToString());
+            Assert.Equal("jetdoe@outlook.com", person.ExtensionData["EmailAddress"].GetString());
+            Assert.False(person.ExtensionData.ContainsKey("Id"));
         }
 
         [Fact]

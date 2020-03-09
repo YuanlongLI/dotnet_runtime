@@ -12,6 +12,8 @@ namespace System.Text.Json
         private JsonConverter<TTypeToConvert> _converter = null!;
         private Type _runtimePropertyType = null!;
 
+        public override JsonConverter ConverterBase => _converter;
+
         public TTypeToConvert TypedDefaultValue { get; private set; } = default!;
 
         public override void Initialize(

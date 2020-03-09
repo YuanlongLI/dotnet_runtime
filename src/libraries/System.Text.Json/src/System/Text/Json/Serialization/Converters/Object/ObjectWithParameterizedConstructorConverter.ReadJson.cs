@@ -69,13 +69,13 @@ namespace System.Text.Json.Serialization.Converters
                     unescapedPropertyName = escapedPropertyName;
                 }
 
-                if (options.ReferenceHandling.ShouldReadPreservedReferences())
-                {
-                    if (escapedPropertyName.Length > 0 && escapedPropertyName[0] == '$')
-                    {
-                        ThrowHelper.ThrowUnexpectedMetadataException(escapedPropertyName, ref reader, ref state);
-                    }
-                }
+                //if (options.ReferenceHandling.ShouldReadPreservedReferences())
+                //{
+                //    if (escapedPropertyName.Length > 0 && escapedPropertyName[0] == '$')
+                //    {
+                //        ThrowHelper.ThrowUnexpectedMetadataException(escapedPropertyName, ref reader, ref state);
+                //    }
+                //}
 
                 if (!TryLookupConstructorParameterFromFastCache(
                     ref state,
@@ -221,8 +221,6 @@ namespace System.Text.Json.Serialization.Converters
             {
                 reader.Read();
 
-                Debug.Assert(state.Current.DataExtension != null);
-
                 if (DataExtensionIsObject)
                 {
                     jsonPropertyInfo.ReadJsonExtensionDataValue(ref state, ref reader, out object? extDataValue);
@@ -239,7 +237,7 @@ namespace System.Text.Json.Serialization.Converters
             }
         }
 
-        protected abstract void ReadAndCacheConstructorArgument(ref ReadStack state, ref Utf8JsonReader reader, JsonParameterInfo jsonParameterInfo, JsonSerializerOptions options);
+        protected abstract bool ReadAndCacheConstructorArgument(ref ReadStack state, ref Utf8JsonReader reader, JsonParameterInfo jsonParameterInfo, JsonSerializerOptions options);
 
         /// <summary>
         /// Lookup the constructor parameter given its name in the reader.

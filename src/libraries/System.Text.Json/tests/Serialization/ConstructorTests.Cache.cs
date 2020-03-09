@@ -11,18 +11,6 @@ namespace System.Text.Json.Serialization.Tests
 {
     public static partial class ConstructorTests
     {
-        [Fact]
-        public static void CachingWorks_WhenDifferentConstructorParameters_PresentOnSubsequentRuns()
-        {
-
-        }
-
-        [Fact]
-        public static void CachingWorks_WhenDifferentObjectProperties_PresentOnSubsequentRuns()
-        {
-
-        }
-
         [Fact, OuterLoop]
         public static void MultipleThreadsLooping()
         {
@@ -124,11 +112,9 @@ namespace System.Text.Json.Serialization.Tests
         // this options is not the default options instance the tests will not use previously cached metadata.
         private static JsonSerializerOptions s_options = new JsonSerializerOptions();
 
-        // TODO: Put some test cases togehter for this.
-
         [Theory]
-        [MemberData(nameof(WriteSuccessCases))]
-        public static void MultipleTypes(ITestClass testObj)
+        [MemberData(nameof(MultipleTypesTestData))]
+        public static void MultipleTypes(ITestClass testObj, object[] args)
         {
             Type type = testObj.GetType();
 
@@ -139,7 +125,7 @@ namespace System.Text.Json.Serialization.Tests
 
             void Serialize()
             {
-                ITestClass localTestObj = (ITestClass)Activator.CreateInstance(type);
+                ITestClass localTestObj = (ITestClass)Activator.CreateInstance(type, args);
                 localTestObj.Initialize();
                 localTestObj.Verify();
                 string json = JsonSerializer.Serialize(localTestObj, type, s_options);
@@ -164,12 +150,14 @@ namespace System.Text.Json.Serialization.Tests
             Task.WaitAll(tasks);
         }
 
-        public static IEnumerable<object[]> WriteSuccessCases
+        public static IEnumerable<object[]> MultipleTypesTestData()
         {
-            get
-            {
-                return TestData.WriteSuccessCases;
-            }
+            yield return new object[] { new Point_2D(1, 2), new object[] { 1, 2 } };
+            yield return new object[] { new Point_3D(1, 2, 3), new object[] { 1, 2, 3 } };
+            yield return new object[] { new Point_2D_With_ExtData(1, 2), new object[] { 1, 2 } };
+
+            Guid id = Guid.Parse("270bb22b-4816-4bd9-9acd-8ec5b1a896d3");
+            yield return new object[] { new Parameterized_Person_Simple(id), new object[] { id } };
         }
     }
 }

@@ -340,7 +340,7 @@ namespace System.Text.Json.Serialization.Tests
         }
     }
 
-    public class Point_2D
+    public class Point_2D : ITestClass
     {
         public int X { get; }
 
@@ -348,9 +348,17 @@ namespace System.Text.Json.Serialization.Tests
 
         [JsonConstructor]
         public Point_2D(int x, int y) => (X, Y) = (x, y);
+
+        public void Initialize() {}
+
+        public void Verify()
+        {
+            Assert.Equal(1, X);
+            Assert.Equal(2, Y);
+        }
     }
 
-    public class Point_3D
+    public class Point_3D : ITestClass
     {
         public int X { get; }
 
@@ -360,9 +368,18 @@ namespace System.Text.Json.Serialization.Tests
 
         [JsonConstructor]
         public Point_3D(int x, int y, int z = 50) => (X, Y, Z) = (x, y, z);
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            Assert.Equal(1, X);
+            Assert.Equal(2, Y);
+            Assert.Equal(3, Z);
+        }
     }
 
-    public struct Point_2D_With_ExtData
+    public struct Point_2D_With_ExtData : ITestClass
     {
         public int X { get; }
 
@@ -378,6 +395,14 @@ namespace System.Text.Json.Serialization.Tests
 
         [JsonExtensionData]
         public Dictionary<string, JsonElement> ExtensionData { get; set; }
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            Assert.Equal(1, X);
+            Assert.Equal(2, Y);
+        }
     }
 
     public struct WrapperForPoint_3D
@@ -444,7 +469,7 @@ namespace System.Text.Json.Serialization.Tests
         public Point_3D_Struct(int x, int y, int z = 50) => (X, Y, Z) = (x, y, z);
     }
 
-    public class Person_Class
+    public class Person_Class : ITestClass
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -487,9 +512,87 @@ namespace System.Text.Json.Serialization.Tests
             ReadOnlyPoint2DWithExtData = readOnlyPoint2DWithExtData;
             ReadOnlySinglePublicParameterizedCtor = readOnlySinglePublicParameterizedCtor;
         }
+
+        public static readonly string s_json =
+             @"{
+                ""FirstName"":""John"",
+                ""LastName"":""Doe"",
+                ""EmailAddress"":""johndoe@live.com"",
+                ""Id"":""f2c92fcc-459f-4287-90b6-a7cbd82aeb0e"",
+                ""Age"":24,
+                ""Point2D"":{""X"":1,""Y"":2},
+                ""ReadOnlyPoint2D"":{""X"":1,""Y"":2},
+                ""Point2DWithExtDataClass"":{""X"":1,""Y"":2,""b"":3},
+                ""ReadOnlyPoint2DWithExtDataClass"":{""X"":1,""Y"":2,""b"":3},
+                ""Point3DStruct"":{""X"":1,""Y"":2,""Z"":3},
+                ""ReadOnlyPoint3DStruct"":{""X"":1,""Y"":2,""Z"":3},
+                ""Point2DWithExtData"":{""X"":1,""Y"":2,""b"":3},
+                ""ReadOnlyPoint2DWithExtData"":{""X"":1,""Y"":2,""b"":3}
+            }";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            Assert.Equal("John", FirstName);
+            Assert.Equal("Doe", LastName);
+            Assert.Equal("johndoe@live.com", EmailAddress);
+            Assert.Equal("f2c92fcc-459f-4287-90b6-a7cbd82aeb0e", Id.ToString());
+            Assert.Equal(24, Age);
+
+            string serialized = JsonSerializer.Serialize(this);
+            Assert.Contains(@"""Point2D"":{", serialized);
+            Assert.Contains(@"""ReadOnlyPoint2D"":{", serialized);
+            Assert.Contains(@"""Point2DWithExtDataClass"":{", serialized);
+            Assert.Contains(@"""ReadOnlyPoint2DWithExtDataClass"":{", serialized);
+            Assert.Contains(@"""Point3DStruct"":{", serialized);
+            Assert.Contains(@"""ReadOnlyPoint3DStruct"":{", serialized);
+            Assert.Contains(@"""Point2DWithExtData"":{", serialized);
+            Assert.Contains(@"""ReadOnlyPoint2DWithExtData"":{", serialized);
+
+            serialized = JsonSerializer.Serialize(Point2D);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+
+            serialized = JsonSerializer.Serialize(ReadOnlyPoint2D);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+
+            serialized = JsonSerializer.Serialize(Point2DWithExtDataClass);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""b"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(ReadOnlyPoint2DWithExtDataClass);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""b"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(Point3DStruct);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""Z"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(ReadOnlyPoint3DStruct);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""Z"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(Point2DWithExtData);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""b"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(ReadOnlyPoint2DWithExtData);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""b"":3", serialized);
+        }
     }
 
-    public struct Person_Struct
+    public struct Person_Struct : ITestClass
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -542,7 +645,89 @@ namespace System.Text.Json.Serialization.Tests
             Point2DWithExtData = default;
             SinglePublicParameterizedCtor = default;
         }
+
+        public static readonly string s_json =
+             @"{
+                ""FirstName"":""John"",
+                ""LastName"":""Doe"",
+                ""EmailAddress"":""johndoe@live.com"",
+                ""Id"":""f2c92fcc-459f-4287-90b6-a7cbd82aeb0e"",
+                ""Age"":24,
+                ""Point2D"":{""X"":1,""Y"":2},
+                ""Junk"":""Data"",
+                ""ReadOnlyPoint2D"":{""X"":1,""Y"":2},
+                ""Point2DWithExtDataClass"":{""X"":1,""Y"":2,""b"":3},
+                ""ReadOnlyPoint2DWithExtDataClass"":{""X"":1,""Y"":2,""b"":3},
+                ""Point3DStruct"":{""X"":1,""Y"":2,""Z"":3},
+                ""More"":""Junk"",
+                ""ReadOnlyPoint3DStruct"":{""X"":1,""Y"":2,""Z"":3},
+                ""Point2DWithExtData"":{""X"":1,""Y"":2,""b"":3},
+                ""ReadOnlyPoint2DWithExtData"":{""X"":1,""Y"":2,""b"":3}
+            }";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            Assert.Equal("John", FirstName);
+            Assert.Equal("Doe", LastName);
+            Assert.Equal("johndoe@live.com", EmailAddress);
+            Assert.Equal("f2c92fcc-459f-4287-90b6-a7cbd82aeb0e", Id.ToString());
+            Assert.Equal(24, Age);
+
+            string serialized = JsonSerializer.Serialize(this);
+            Assert.Contains(@"""Point2D"":{", serialized);
+            Assert.Contains(@"""ReadOnlyPoint2D"":{", serialized);
+            Assert.Contains(@"""Point2DWithExtDataClass"":{", serialized);
+            Assert.Contains(@"""ReadOnlyPoint2DWithExtDataClass"":{", serialized);
+            Assert.Contains(@"""Point3DStruct"":{", serialized);
+            Assert.Contains(@"""ReadOnlyPoint3DStruct"":{", serialized);
+            Assert.Contains(@"""Point2DWithExtData"":{", serialized);
+            Assert.Contains(@"""ReadOnlyPoint2DWithExtData"":{", serialized);
+
+            serialized = JsonSerializer.Serialize(Point2D);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+
+            serialized = JsonSerializer.Serialize(ReadOnlyPoint2D);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+
+            serialized = JsonSerializer.Serialize(Point2DWithExtDataClass);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""b"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(ReadOnlyPoint2DWithExtDataClass);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""b"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(Point3DStruct);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""Z"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(ReadOnlyPoint3DStruct);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""Z"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(Point2DWithExtData);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""b"":3", serialized);
+
+            serialized = JsonSerializer.Serialize(ReadOnlyPoint2DWithExtData);
+            Assert.Contains(@"""X"":1", serialized);
+            Assert.Contains(@"""Y"":2", serialized);
+            Assert.Contains(@"""b"":3", serialized);
+        }
     }
+
+
 
     public class Point_2D_With_ExtData_Class
     {
@@ -734,6 +919,7 @@ namespace System.Text.Json.Serialization.Tests
             @"""MyInt64Enum"" : -9223372036854775808," +
             @"""MyUInt64Enum"" : 18446744073709551615," +
             @"""MySimpleStruct"" : {""One"" : 11, ""Two"" : 1.9999, ""Three"" : 33}," +
+            @"""MySimpleTestStruct"" : {""MyInt64"" : 64, ""MyString"" :""Hello"", ""MyInt32Array"" : [32]}," +
             @"""MyInt16ThreeDimensionArray"" : [[[11, 12],[13, 14]],[[21,22],[23,24]]]";
 
         private const string s_partialJson2 =
@@ -753,6 +939,8 @@ namespace System.Text.Json.Serialization.Tests
             @"""MyStringImmutablQueueT"" : [""Hello""]," +
             @"""MyStringImmutableSortedSetT"" : [""Hello""]," +
             @"""MyListOfNullString"" : [null]";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
 
         public void Initialize() { }
 
@@ -774,6 +962,9 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(SampleEnumUInt64.Max, MyUInt64Enum);
             Assert.Equal(11, MySimpleStruct.One);
             Assert.Equal(1.9999, MySimpleStruct.Two);
+            Assert.Equal(64, MySimpleTestStruct.MyInt64);
+            Assert.Equal("Hello", MySimpleTestStruct.MyString);
+            Assert.Equal(32, MySimpleTestStruct.MyInt32Array[0]);
 
             Assert.Equal(11, MyInt16ThreeDimensionArray[0][0][0]);
             Assert.Equal(12, MyInt16ThreeDimensionArray[0][0][1]);
@@ -922,7 +1113,7 @@ namespace System.Text.Json.Serialization.Tests
         }
     }
 
-    public class Class_With_Ctor_With_64_Params
+    public class Class_With_Ctor_With_64_Params : ITestClass
     {
         public int Int0 { get; }
         public int Int1 { get; }
@@ -1006,6 +1197,34 @@ namespace System.Text.Json.Serialization.Tests
             Int40 = int40; Int41 = int41; Int42 = int42; Int43 = int43; Int44 = int44; Int45 = int45; Int46 = int46; Int47 = int47;
             Int48 = int48; Int49 = int49; Int50 = int50; Int51 = int51; Int52 = int52; Int53 = int53; Int54 = int54; Int55 = int55;
             Int56 = int56; Int57 = int57; Int58 = int58; Int59 = int59; Int60 = int60; Int61 = int61; Int62 = int62; Int63 = int63;
+        }
+
+        public static string Json {
+            get
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append("{");
+                for (int i = 0; i < 63; i++)
+                {
+                    sb.Append($@"""Int{i}"":{i},");
+                }
+                sb.Append($@"""Int63"":63");
+                sb.Append("}");
+
+                return sb.ToString();
+            }
+        }
+
+        public static byte[] Data => Encoding.UTF8.GetBytes(Json);
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                Assert.Equal(i, (int)typeof(Class_With_Ctor_With_64_Params).GetProperty($"Int{i}").GetValue(this));
+            }
         }
     }
 
@@ -1276,7 +1495,7 @@ namespace System.Text.Json.Serialization.Tests
         }
     }
 
-    public class Parameterized_Person
+    public class Parameterized_Person : ITestClass
     {
         public string FirstName { get; set; }
 
@@ -1288,6 +1507,96 @@ namespace System.Text.Json.Serialization.Tests
         public Dictionary<string, JsonElement> ExtensionData { get; set; }
 
         public Parameterized_Person(Guid id) => Id = id;
+
+        public static readonly string s_json = @"{
+            ""FirstName"":""Jet"",
+            ""Id"":""270bb22b-4816-4bd9-9acd-8ec5b1a896d3"",
+            ""EmailAddress"":""jetdoe@outlook.com"",
+            ""Id"":""0b3aa420-2e98-47f7-8a49-fea233b89416"",
+            ""LastName"":""Doe"",
+            ""Id"":""63cf821d-fd47-4782-8345-576d9228a534""
+            }";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            Assert.Equal("Jet", FirstName);
+            Assert.Equal("Doe", LastName);
+            Assert.Equal("63cf821d-fd47-4782-8345-576d9228a534", Id.ToString());
+            Assert.Equal("jetdoe@outlook.com", ExtensionData["EmailAddress"].GetString());
+            Assert.False(ExtensionData.ContainsKey("Id"));
+        }
+    }
+
+    public class Parameterized_Person_ObjExtData : ITestClass
+    {
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public Guid Id { get; }
+
+        [JsonExtensionData]
+        public Dictionary<string, object> ExtensionData { get; set; }
+
+        public Parameterized_Person_ObjExtData(Guid id) => Id = id;
+
+        public static readonly string s_json = @"{
+            ""FirstName"":""Jet"",
+            ""Id"":""270bb22b-4816-4bd9-9acd-8ec5b1a896d3"",
+            ""EmailAddress"":""jetdoe@outlook.com"",
+            ""Id"":""0b3aa420-2e98-47f7-8a49-fea233b89416"",
+            ""LastName"":""Doe"",
+            ""Id"":""63cf821d-fd47-4782-8345-576d9228a534""
+            }";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            Assert.Equal("Jet", FirstName);
+            Assert.Equal("Doe", LastName);
+            Assert.Equal("63cf821d-fd47-4782-8345-576d9228a534", Id.ToString());
+            Assert.Equal("jetdoe@outlook.com", ((JsonElement)ExtensionData["EmailAddress"]).GetString());
+            Assert.False(ExtensionData.ContainsKey("Id"));
+        }
+    }
+
+    public class Parameterized_Person_Simple : ITestClass
+    {
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public Guid Id { get; }
+
+        public Parameterized_Person_Simple(Guid id) => Id = id;
+
+        public static readonly string s_json = @"{
+            ""FirstName"":""Jet"",
+            ""Id"":""270bb22b-4816-4bd9-9acd-8ec5b1a896d3"",
+            ""LastName"":""Doe""
+            }";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Initialize()
+        {
+            FirstName = "Jet";
+            LastName = "Doe";
+        }
+
+        public void Verify()
+        {
+            Assert.Equal("Jet", FirstName);
+            Assert.Equal("Doe", LastName);
+            Assert.Equal("270bb22b-4816-4bd9-9acd-8ec5b1a896d3", Id.ToString());
+        }
     }
 
     public class SimpleClassWithParameterizedCtor_GenericDictionary_JsonElementExt
@@ -1364,10 +1673,210 @@ namespace System.Text.Json.Serialization.Tests
         public SimpleClassWithParameterizedCtor_Derived_GenericIDictionary_ObjectExt(int x) { }
     }
 
-    public class Parameterless_Point
+    public class Parameterized_IndexViewModel_Immutable : ITestClass
     {
-        public int X { get; set; }
+        public List<ActiveOrUpcomingEvent> ActiveOrUpcomingEvents { get; }
+        public CampaignSummaryViewModel FeaturedCampaign { get; }
+        public bool IsNewAccount { get; }
+        public bool HasFeaturedCampaign => FeaturedCampaign != null;
 
-        public int Y { get; set; }
+        public Parameterized_IndexViewModel_Immutable(
+            List<ActiveOrUpcomingEvent> activeOrUpcomingEvents,
+            CampaignSummaryViewModel featuredCampaign,
+            bool isNewAccount)
+        {
+            ActiveOrUpcomingEvents = activeOrUpcomingEvents;
+            FeaturedCampaign = featuredCampaign;
+            IsNewAccount = isNewAccount;
+        }
+
+        public static readonly string s_json =
+            @"{
+              ""ActiveOrUpcomingEvents"": [
+                {
+                  ""Id"": 10,
+                  ""ImageUrl"": ""https://www.dotnetfoundation.org/theme/img/carousel/foundation-diagram-content.png"",
+                  ""Name"": ""Just a name"",
+                  ""CampaignName"": ""The very new campaing"",
+                  ""CampaignManagedOrganizerName"": ""Name FamiltyName"",
+                  ""Description"": ""The .NET Foundation works with Microsoft and the broader industry to increase the exposure of open source projects in the .NET community and the .NET Foundation. The .NET Foundation provides access to these resources to projects and looks to promote the activities of our communities."",
+                  ""StartDate"": ""2019-01-30T12:01:02+00:00"",
+                  ""EndDate"": ""2019-01-30T12:01:02+00:00""
+                }
+              ],
+              ""FeaturedCampaign"": {
+                ""Id"": 234235,
+                ""Title"": ""Promoting Open Source"",
+                ""Description"": ""Very nice campaing"",
+                ""ImageUrl"": ""https://www.dotnetfoundation.org/theme/img/carousel/foundation-diagram-content.png"",
+                ""OrganizationName"": ""The Company XYZ"",
+                ""Headline"": ""The Headline""
+              },
+              ""IsNewAccount"": false,
+              ""HasFeaturedCampaign"": true
+            }";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            Assert.False(IsNewAccount);
+
+            ActiveOrUpcomingEvent @event = ActiveOrUpcomingEvents.First();
+            Assert.Equal(10, @event.Id);
+            Assert.Equal("Name FamiltyName", @event.CampaignManagedOrganizerName);
+            Assert.Equal("The very new campaing", @event.CampaignName);
+            Assert.Equal("The .NET Foundation works with Microsoft and the broader industry to increase the exposure of open source projects in the .NET community and the .NET Foundation. The .NET Foundation provides access to these resources to projects and looks to promote the activities of our communities.", @event.Description);
+            Assert.Equal(new DateTime(2019, 1, 30, 12, 1, 2, DateTimeKind.Utc), @event.EndDate);
+            Assert.Equal("Just a name", @event.Name);
+            Assert.Equal("https://www.dotnetfoundation.org/theme/img/carousel/foundation-diagram-content.png", @event.ImageUrl);
+            Assert.Equal(new DateTime(2019, 1, 30, 12, 1, 2, DateTimeKind.Utc), @event.StartDate);
+
+            Assert.Equal("Very nice campaing", FeaturedCampaign.Description);
+            Assert.Equal("The Headline", FeaturedCampaign.Headline);
+            Assert.Equal(234235, FeaturedCampaign.Id);
+            Assert.Equal("The Company XYZ", FeaturedCampaign.OrganizationName);
+            Assert.Equal("https://www.dotnetfoundation.org/theme/img/carousel/foundation-diagram-content.png", FeaturedCampaign.ImageUrl);
+            Assert.Equal("Promoting Open Source", FeaturedCampaign.Title);
+        }
+    }
+
+    public class ActiveOrUpcomingEvent
+    {
+        public int Id { get; set; }
+        public string ImageUrl { get; set; }
+        public string Name { get; set; }
+        public string CampaignName { get; set; }
+        public string CampaignManagedOrganizerName { get; set; }
+        public string Description { get; set; }
+        public DateTimeOffset StartDate { get; set; }
+        public DateTimeOffset EndDate { get; set; }
+    }
+
+    public class CampaignSummaryViewModel
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string ImageUrl { get; set; }
+        public string OrganizationName { get; set; }
+        public string Headline { get; set; }
+    }
+
+    public class Parameterized_Class_With_ComplexTuple : ITestClass
+    {
+        public Tuple<
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters> MyTuple { get; }
+
+        public Parameterized_Class_With_ComplexTuple(
+            Tuple<
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters,
+                ClassWithConstructor_SimpleAndComplexParameters> myTuple) => MyTuple = myTuple;
+
+        private static readonly string s_inner_json = @"
+            {
+                ""MyByte"": 7,
+                ""MyChar"": ""a"",
+                ""MyString"": ""Hello"",
+                ""MyDecimal"": 3.3,
+                ""MyBooleanFalse"": false,
+                ""MyDouble"": 2.2,
+                ""MyDateTimeOffset"": ""2019-01-30T12:01:02+01:00"",
+                ""MyGuid"": ""1b33498a-7b7d-4dda-9c13-f6aa4ab449a6"",
+                ""MyEnum"": 2,
+                ""MyInt64Enum"": -9223372036854775808,
+                ""MyUInt64Enum"": 18446744073709551615,
+                ""MySimpleStruct"": { ""One"": 11, ""Two"": 1.9999 },
+                ""MyInt16ThreeDimensionArray"": [ [ [ 11, 12 ], [ 13, 14 ] ], [ [ 21, 22 ], [ 23, 24 ] ] ],
+                ""MyInt16ThreeDimensionList"": [ [ [ 11, 12 ], [ 13, 14 ] ], [ [ 21, 22 ], [ 23, 24 ] ] ],
+                ""MyStringList"": [ ""Hello"" ],
+                ""MyStringIList"": [ ""Hello"" ],
+                ""MyStringIEnumerableT"": [ ""Hello"" ],
+                ""MyStringIReadOnlyListT"": [ ""Hello"" ],
+                ""MyStringToStringKeyValuePair"": { ""Key"": ""myKey"", ""Value"": ""myValue"" },
+                ""MyStringToStringGenericDict"": { ""key"": ""value"" },
+                ""MyStringToStringIImmutableDict"": { ""key"": ""value"" },
+                ""MyStringImmutableSortedSetT"": [ ""Hello"" ],
+                ""MyListOfNullString"": [ null ],
+                ""MySByte"": 8,
+                ""MyBooleanTrue"": true,
+                ""MySingle"": 1.1,
+                ""MyDateTime"": ""2019-01-30T12:01:02Z"",
+                ""MyUri"": ""https://github.com/dotnet/runtime"",
+                ""MySimpleTestStruct"": {
+                  ""MyInt16"": 0,
+                  ""MyInt32"": 0,
+                  ""MyInt64"": 64,
+                  ""MyUInt16"": 0,
+                  ""MyUInt32"": 0,
+                  ""MyUInt64"": 0,
+                  ""MyByte"": 0,
+                  ""MySByte"": 0,
+                  ""MyChar"": ""\u0000"",
+                  ""MyString"": ""Hello"",
+                  ""MyDecimal"": 0,
+                  ""MyBooleanTrue"": false,
+                  ""MyBooleanFalse"": false,
+                  ""MySingle"": 0,
+                  ""MyDouble"": 0,
+                  ""MyDateTime"": ""0001-01-01T00:00:00"",
+                  ""MyDateTimeOffset"": ""0001-01-01T00:00:00+00:00"",
+                  ""MyEnum"": 0,
+                  ""MyInt64Enum"": 0,
+                  ""MyUInt64Enum"": 0,
+                  ""MySimpleStruct"": {
+                    ""One"": 0,
+                    ""Two"": 0
+                  },
+                  ""MyInt32Array"": [ 32 ]
+                },
+                ""MyStringIEnumerable"": [ ""Hello"" ],
+                ""MyStringICollection"": [ ""Hello"" ],
+                ""MyStringISetT"": [ ""Hello"" ],
+                ""MyStringToStringIDict"": { ""key"": ""value"" },
+                ""MyStringToStringGenericIDict"": { ""key"": ""value"" },
+                ""MyStringImmutablQueueT"": [ ""Hello"" ]
+              }";
+
+        public static readonly string s_json =
+            $@"{{
+                ""MyTuple"": {{
+                    ""Item1"":{s_inner_json},
+                    ""Item2"":{s_inner_json},
+                    ""Item3"":{s_inner_json},
+                    ""Item4"":{s_inner_json},
+                    ""Item5"":{s_inner_json},
+                    ""Item6"":{s_inner_json},
+                    ""Item7"":{s_inner_json}
+                }}
+            }}";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Initialize() { }
+
+        public void Verify()
+        {
+            MyTuple.Item1.Verify();
+            MyTuple.Item2.Verify();
+            MyTuple.Item3.Verify();
+            MyTuple.Item4.Verify();
+            MyTuple.Item5.Verify();
+            MyTuple.Item6.Verify();
+            MyTuple.Item7.Verify();
+        }
     }
 }

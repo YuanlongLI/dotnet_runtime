@@ -23,11 +23,16 @@ namespace System.Text.Json.Serialization.Converters
             _createObject = options.MemberAccessorStrategy.CreateParameterizedConstructor<TypeToConvert>(constructor)!;
         }
 
-        protected override void ReadAndCacheConstructorArgument(ref ReadStack state, ref Utf8JsonReader reader, JsonParameterInfo jsonParameterInfo, JsonSerializerOptions options)
+        protected override bool ReadAndCacheConstructorArgument(ref ReadStack state, ref Utf8JsonReader reader, JsonParameterInfo jsonParameterInfo, JsonSerializerOptions options)
         {
-            jsonParameterInfo.ReadJson(ref state, ref reader, options, out object? arg0);
+            bool success = jsonParameterInfo.ReadJson(ref state, ref reader, options, out object? arg0);
 
-            ((object[])state.Current.ConstructorArguments!)[jsonParameterInfo.Position] = arg0!;
+            if (success)
+            {
+                ((object[])state.Current.ConstructorArguments!)[jsonParameterInfo.Position] = arg0!;
+            }
+
+            return success;
         }
 
         protected override object CreateObject(ref ReadStack state)
