@@ -52,62 +52,51 @@ namespace System.Text.Json
             }
         }
 
+        public bool ShouldDeserialize { get; private set; }
+
         public virtual void Initialize(
+            string matchingPropertyName,
             Type declaredPropertyType,
             Type runtimePropertyType,
             ParameterInfo parameterInfo,
-            Type parentClassType,
             JsonConverter converter,
-            ClassType classType,
             JsonSerializerOptions options)
         {
             _runtimePropertyType = runtimePropertyType;
 
             Options = options;
-
             ParameterInfo = parameterInfo;
+            Position = parameterInfo.Position;
+            ShouldDeserialize = true;
 
-            string name = ParameterInfo.Name!;
-            // TODO: introduce constructor parameter naming policy
-            //if (Options.PropertyNamingPolicy == null)
-            //{
-            if (name.Length > 0)
-                {
+            DetermineParameterName(matchingPropertyName);
+        }
 
-#if BUILDING_INBOX_LIBRARY
-                    NameAsString = string.Create(name.Length, name, (chars, name) =>
-                    {
-                        name.AsSpan().CopyTo(chars);
-                        chars[0] = char.ToUpperInvariant(chars[0]);
-                    });
-#else
-                    char[] chars = name.ToCharArray();
-                    chars[0] = char.ToUpperInvariant(chars[0]);
-                    NameAsString = new string(chars);
-#endif
-            }
-            else
-                {
-                    NameAsString = name;
-                }
-            //}
-            //else
-            //{
-            //    string name = Options.PropertyNamingPolicy.ConvertName(ParameterInfo.Name!);
-            //    if (name == null)
-            //    {
-            //        ThrowHelper.ThrowInvalidOperationException_SerializerConstructorNameNull(parentClassType, this);
-            //    }
-
-            //    NameAsString = name;
-            //}
+        private void DetermineParameterName(string matchingPropertyName)
+        {
+            NameAsString = matchingPropertyName;
 
             // `NameAsString` is valid UTF16, so just call the simple UTF16->UTF8 encoder.
             ParameterName = Encoding.UTF8.GetBytes(NameAsString);
 
             ParameterNameKey = JsonClassInfo.GetKey(ParameterName);
+        }
 
-            Position = parameterInfo.Position;
+        // Create a parameter that is ignored at run-time. It uses the same type (typeof(sbyte)) to help
+        // prevent issues with unsupported types and helps ensure we don't accidently (de)serialize it.
+        public static JsonParameterInfo CreateIgnoredParameterPlaceholder(
+            string matchingPropertyName,
+            ParameterInfo parameterInfo,
+            JsonSerializerOptions options)
+        {
+            JsonParameterInfo jsonParameterInfo = new JsonParameterInfo<sbyte>();
+            jsonParameterInfo.Options = options;
+            jsonParameterInfo.ParameterInfo = parameterInfo;
+            jsonParameterInfo.ShouldDeserialize = false;
+
+            jsonParameterInfo.DetermineParameterName(matchingPropertyName);
+
+            return jsonParameterInfo;
         }
 
         public abstract bool ReadJson(ref ReadStack state, ref Utf8JsonReader reader, JsonSerializerOptions options, out object? argument);

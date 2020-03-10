@@ -122,7 +122,14 @@ namespace System.Text.Json.Serialization.Converters
                 // Set the property value.
                 reader.Read();
 
-                ReadAndCacheConstructorArgument(ref state, ref reader, jsonParameterInfo!, options);
+                if (!(jsonParameterInfo!.ShouldDeserialize))
+                {
+                    reader.Skip();
+                    state.Current.EndConstructorParameter();
+                    continue;
+                }
+
+                ReadAndCacheConstructorArgument(ref state, ref reader, jsonParameterInfo, options);
 
                 state.Current.EndConstructorParameter();
             }

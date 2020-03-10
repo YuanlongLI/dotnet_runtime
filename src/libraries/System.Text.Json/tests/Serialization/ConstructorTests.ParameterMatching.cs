@@ -297,28 +297,9 @@ namespace System.Text.Json.Serialization.Tests
         [Fact]
         public static void PropertiesNotSet_WhenJSON_MapsToConstructorParameters()
         {
-            var obj = JsonSerializer.Deserialize<Point_PropertiesHavePropertyNames>(@"{""A"":1,""B"":2}");
+            var obj = JsonSerializer.Deserialize<Point_CtorsIgnoreJson>(@"{""X"":1,""Y"":2}");
             Assert.Equal(40, obj.X); // Would be 1 if property were set directly after object construction.
             Assert.Equal(60, obj.Y); // Would be 2 if property were set directly after object construction.
-            Assert.Equal(@"{""A"":40,""B"":60}", JsonSerializer.Serialize(obj));
-
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = new PointPropertyNamingPolicy()
-            };
-
-            var obj2 = JsonSerializer.Deserialize<Point_2D_Mutable>(@"{""A"":1,""B"":2}", options);
-            Assert.Equal(40, obj2.X); // Would be 1 if property were set directly after object construction.
-            Assert.Equal(60, obj2.Y); // Would be 2 if property were set directly after object construction.
-            Assert.Equal(@"{""A"":40,""B"":60}", JsonSerializer.Serialize(obj));
-        }
-
-        [Fact]
-        public static void PropertiesSet_WhenJSON_DoesNotMapToConstructorParameters()
-        {
-            var obj = JsonSerializer.Deserialize<Point_2D_Mutable>(@"{""X"":1,""Y"":2}");
-            Assert.Equal(1, obj.X); // Would be 40 if constructor were called.
-            Assert.Equal(2, obj.Y); // Would be 60 if constructor were called.
         }
 
         [Fact]
@@ -791,13 +772,13 @@ namespace System.Text.Json.Serialization.Tests
 
         [Theory]
         [InlineData(typeof(SimpleClassWithParameterizedCtor_GenericDictionary_JsonElementExt))]
-        //[InlineData(typeof(SimpleClassWithParameterizedCtor_GenericDictionary_ObjectExt))]
-        //[InlineData(typeof(SimpleClassWithParameterizedCtor_GenericIDictionary_JsonElementExt))]
-        //[InlineData(typeof(SimpleClassWithParameterizedCtor_GenericIDictionary_ObjectExt))]
-        //[InlineData(typeof(SimpleClassWithParameterizedCtor_Derived_GenericDictionary_JsonElementExt))]
-        //[InlineData(typeof(SimpleClassWithParameterizedCtor_Derived_GenericDictionary_ObjectExt))]
-        //[InlineData(typeof(SimpleClassWithParameterizedCtor_Derived_GenericIDictionary_JsonElementExt))]
-        //[InlineData(typeof(SimpleClassWithParameterizedCtor_Derived_GenericIDictionary_ObjectExt))]
+        [InlineData(typeof(SimpleClassWithParameterizedCtor_GenericDictionary_ObjectExt))]
+        [InlineData(typeof(SimpleClassWithParameterizedCtor_GenericIDictionary_JsonElementExt))]
+        [InlineData(typeof(SimpleClassWithParameterizedCtor_GenericIDictionary_ObjectExt))]
+        [InlineData(typeof(SimpleClassWithParameterizedCtor_Derived_GenericDictionary_JsonElementExt))]
+        [InlineData(typeof(SimpleClassWithParameterizedCtor_Derived_GenericDictionary_ObjectExt))]
+        [InlineData(typeof(SimpleClassWithParameterizedCtor_Derived_GenericIDictionary_JsonElementExt))]
+        [InlineData(typeof(SimpleClassWithParameterizedCtor_Derived_GenericIDictionary_ObjectExt))]
         public static void HonorExtensionData(Type type)
         {
             var obj1 = JsonSerializer.Deserialize(@"{""key"": ""value""}", type);
@@ -817,7 +798,32 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal("value", value.GetString());
         }
 
-        // Serialization puts properties that might map to constructor arguments later
+        [Fact]
+        public static void ArgumentDeserialization_Honors_JsonPropertyName()
+        {
+            Point_MembersHave_JsonPropertyName point = new Point_MembersHave_JsonPropertyName(1, 2);
+
+            string json = JsonSerializer.Serialize(point);
+            Assert.Contains(@"""XValue"":1", json);
+            Assert.Contains(@"""YValue"":2", json);
+
+            point = JsonSerializer.Deserialize<Point_MembersHave_JsonPropertyName>(json);
+            point.Verify();
+        }
+
+        [Fact]
+        public static void ArgumentDeserialization_Honors_ConverterOnProperty()
+        {
+            var point = JsonSerializer.Deserialize<Point_MembersHave_JsonConverter>(Point_MembersHave_JsonConverter.s_json);
+            point.Verify();
+        }
+
+        [Fact]
+        public static void ArgumentDeserialization_Honors_JsonIgnore()
+        {
+            var point = JsonSerializer.Deserialize<Point_MembersHave_JsonIgnore>(Point_MembersHave_JsonIgnore.s_json);
+            point.Verify();
+        }
 
         // With array as last constructor argument.
 

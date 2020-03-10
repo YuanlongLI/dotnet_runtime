@@ -485,10 +485,10 @@
   <data name="MetadataInvalidPropertyWithLeadingDollarSign" xml:space="preserve">
     <value>Properties that start with '$' are not allowed on preserve mode, either escape the character or turn off preserve references by setting ReferenceHandling to ReferenceHandling.Default.</value>
   </data>
-  <data name="SerializerConstructorNameNull" xml:space="preserve">
-    <value>The JSON constructor name for '{0}.{1}' cannot be null.</value>
-  </data>
   <data name="SerializationNotSupportedConstructorParameter" xml:space="preserve">
     <value>The constructor parameter of type '{0}' on '{1}' is not supported.</value>
+  </data>
+  <data name="MultipleMembersBindWithConstructorParameter" xml:space="preserve">
+    <value>Members '{0}' and '{1}' on type '{2}' cannot both bind with constructor parameter '{3}' on deserialization.</value>
   </data>
 </root>

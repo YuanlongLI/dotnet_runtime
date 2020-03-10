@@ -182,14 +182,14 @@ namespace System.Text.Json.Serialization.Tests
             e = Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<ClassWithInvalidArray>(@"{""UnsupportedArray"":[]}"));
 
             // The exception should contain the parent type and the property name.
-            Assert.Contains("ClassWithInvalidArray.unsupportedArray", e.ToString());
+            Assert.Contains("ClassWithInvalidArray.UnsupportedArray", e.ToString());
 
             e = Assert.Throws<NotSupportedException>(() => JsonSerializer.Deserialize<ClassWithInvalidDictionary>(@"{""UnsupportedDictionary"":{}}"));
             Assert.Contains("System.Int32[,]", e.ToString());
 
             // The exception for element types do not contain the parent type and the property name
             // since the verification occurs later and is no longer bound to the parent type.
-            Assert.DoesNotContain("ClassWithInvalidDictionary.unsupportedDictionary", e.ToString());
+            Assert.DoesNotContain("ClassWithInvalidDictionary.UnsupportedDictionary", e.ToString());
         }
 
         private class ClassWithInvalidArray
@@ -210,6 +210,28 @@ namespace System.Text.Json.Serialization.Tests
             {
                 UnsupportedDictionary = unsupportedDictionary;
             }
+        }
+
+        [Fact]
+        public static void MultipleProperties_Cannot_BindTo_TheSame_ConstructorParameter()
+        {
+            InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
+                () => JsonSerializer.Deserialize<Point_MultipleMembers_BindTo_OneConstructorParameter>("{}"));
+
+            string exStr = ex.ToString();
+
+            Assert.Contains("'X'", exStr);
+            Assert.Contains("'x'", exStr);
+            Assert.Contains("System.Text.Json.Serialization.Tests.Point_MultipleMembers_BindTo_OneConstructorParameter", exStr);
+
+            ex = Assert.Throws<InvalidOperationException>(
+                () => JsonSerializer.Deserialize<Point_MultipleMembers_BindTo_OneConstructorParameter_Variant>("{}"));
+
+            exStr = ex.ToString();
+
+            Assert.Contains("'X'", exStr);
+            Assert.Contains("'x'", exStr);
+            Assert.Contains("System.Text.Json.Serialization.Tests.Point_MultipleMembers_BindTo_OneConstructorParameter_Variant", exStr);
         }
     }
 }

@@ -38,6 +38,7 @@ namespace System.Text.Json
             jsonPropertyInfo.Options = options;
             jsonPropertyInfo.PropertyInfo = propertyInfo;
             jsonPropertyInfo.DeterminePropertyName();
+            jsonPropertyInfo.IsIgnored = true;
 
             Debug.Assert(!jsonPropertyInfo.ShouldDeserialize);
             Debug.Assert(!jsonPropertyInfo.ShouldSerialize);
@@ -291,5 +292,6 @@ namespace System.Text.Json
 
         public bool ShouldSerialize { get; private set; }
         public bool ShouldDeserialize { get; private set; }
+        public bool IsIgnored { get; private set; }
     }
 }

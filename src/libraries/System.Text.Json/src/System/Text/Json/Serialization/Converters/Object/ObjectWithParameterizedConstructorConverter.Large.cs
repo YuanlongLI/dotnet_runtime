@@ -53,10 +53,19 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void InitializeConstructorArgumentCaches(ref ReadStackFrame frame, JsonSerializerOptions options)
         {
-            object[] arguments = ArrayPool<object>.Shared.Rent(ParameterCount);
-            foreach (JsonParameterInfo parameterInfo in ParameterCache.Values)
+            if (ParameterCount != ParameterCache.Count)
             {
-                arguments[parameterInfo.Position] = parameterInfo.DefaultValue!;
+                // Constructor parameters and properties don't map 1:1.
+                throw new InvalidOperationException();
+            }
+
+            object[] arguments = ArrayPool<object>.Shared.Rent(ParameterCount);
+            foreach (JsonParameterInfo jsonParameterInfo in ParameterCache.Values)
+            {
+                if (jsonParameterInfo.ShouldDeserialize)
+                {
+                    arguments[jsonParameterInfo.Position] = jsonParameterInfo.DefaultValue!;
+                }
             }
 
             frame.ConstructorArguments = arguments;

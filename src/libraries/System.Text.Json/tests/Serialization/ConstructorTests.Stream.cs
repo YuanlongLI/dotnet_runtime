@@ -94,6 +94,9 @@ namespace System.Text.Json.Serialization.Tests
             yield return new object[] { typeof(Class_With_Ctor_With_64_Params), Class_With_Ctor_With_64_Params.Data };
             yield return new object[] { typeof(Person_Class), Person_Class.s_data };
             yield return new object[] { typeof(Person_Struct), Person_Struct.s_data };
+            yield return new object[] { typeof(Point_MembersHave_JsonPropertyName), Point_MembersHave_JsonPropertyName.s_data };
+            yield return new object[] { typeof(Point_MembersHave_JsonConverter), Point_MembersHave_JsonConverter.s_data };
+            yield return new object[] { typeof(Point_MembersHave_JsonIgnore), Point_MembersHave_JsonIgnore.s_data };
         }
     }
 }

@@ -17,21 +17,19 @@ namespace System.Text.Json
         public TTypeToConvert TypedDefaultValue { get; private set; } = default!;
 
         public override void Initialize(
+            string matchingPropertyName,
             Type declaredPropertyType,
             Type runtimePropertyType,
             ParameterInfo parameterInfo,
-            Type parentClassType,
             JsonConverter converter,
-            ClassType classType,
             JsonSerializerOptions options)
         {
             base.Initialize(
+                matchingPropertyName,
                 declaredPropertyType,
                 runtimePropertyType,
                 parameterInfo,
-                parentClassType,
                 converter,
-                classType,
                 options);
 
             _converter = (JsonConverter<TTypeToConvert>)converter;

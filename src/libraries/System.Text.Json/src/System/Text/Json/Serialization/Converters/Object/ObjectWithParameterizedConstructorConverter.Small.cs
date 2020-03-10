@@ -78,29 +78,38 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void InitializeConstructorArgumentCaches(ref ReadStackFrame frame, JsonSerializerOptions options)
         {
+            if (ParameterCount != ParameterCache.Count)
+            {
+                // Constructor parameters and properties don't map 1:1.
+                throw new InvalidOperationException();
+            }
+
             var arguments = new ArgumentCache<TArg0, TArg1, TArg2, TArg3>();
 
             foreach (JsonParameterInfo parameterInfo in ParameterCache.Values)
             {
-                int position = parameterInfo.Position;
-
-                switch (position)
+                if (parameterInfo.ShouldDeserialize)
                 {
-                    case 0:
-                        arguments.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 1:
-                        arguments.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 2:
-                        arguments.Arg2 = ((JsonParameterInfo<TArg2>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    case 3:
-                        arguments.Arg3 = ((JsonParameterInfo<TArg3>)parameterInfo).TypedDefaultValue!;
-                        break;
-                    default:
-                        Debug.Fail("We should never get here.");
-                        break;
+                    int position = parameterInfo.Position;
+
+                    switch (position)
+                    {
+                        case 0:
+                            arguments.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
+                            break;
+                        case 1:
+                            arguments.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
+                            break;
+                        case 2:
+                            arguments.Arg2 = ((JsonParameterInfo<TArg2>)parameterInfo).TypedDefaultValue!;
+                            break;
+                        case 3:
+                            arguments.Arg3 = ((JsonParameterInfo<TArg3>)parameterInfo).TypedDefaultValue!;
+                            break;
+                        default:
+                            Debug.Fail("We should never get here.");
+                            break;
+                    }
                 }
             }
 

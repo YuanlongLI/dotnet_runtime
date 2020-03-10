@@ -151,16 +151,23 @@ namespace System.Text.Json
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowInvalidOperationException_SerializerConstructorNameNull(Type parentType, JsonParameterInfo jsonParameterInfo)
+        public static void ThrowInvalidOperationException_SerializerDictionaryKeyNull(Type policyType)
         {
-            throw new InvalidOperationException(SR.Format(SR.SerializerConstructorNameNull, parentType, jsonParameterInfo.ParameterInfo?.Name));
+            throw new InvalidOperationException(SR.Format(SR.SerializerDictionaryKeyNull, policyType));
         }
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowInvalidOperationException_SerializerDictionaryKeyNull(Type policyType)
+        public static void ThrowInvalidOperationException_MultiplePropertiesBindToConstructorParameters(
+            Type parentType, ParameterInfo parameterInfo, PropertyInfo firstMatch, PropertyInfo secondMatch)
         {
-            throw new InvalidOperationException(SR.Format(SR.SerializerDictionaryKeyNull, policyType));
+            throw new InvalidOperationException(
+                SR.Format(
+                    SR.MultipleMembersBindWithConstructorParameter,
+                    firstMatch.Name,
+                    secondMatch.Name,
+                    parentType,
+                    parameterInfo.Name));
         }
 
         [DoesNotReturn]

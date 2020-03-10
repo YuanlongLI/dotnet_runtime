@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace System.Text.Json.Serialization.Tests
 {
@@ -746,30 +747,14 @@ namespace System.Text.Json.Serialization.Tests
         public Dictionary<string, JsonElement> ExtensionData { get; set; }
     }
 
-    public class Point_PropertiesHavePropertyNames
-    {
-        [JsonPropertyName("A")]
-        public int X { get; set; }
-
-        [JsonPropertyName("B")]
-        public int Y { get; set; }
-
-        [JsonConstructor]
-        public Point_PropertiesHavePropertyNames(int a, int b)
-        {
-            X = 40;
-            Y = 60;
-        }
-    }
-
-    public class Point_2D_Mutable
+    public class Point_CtorsIgnoreJson
     {
         public int X { get; set; }
 
         public int Y { get; set; }
 
         [JsonConstructor]
-        public Point_2D_Mutable(int a, int b)
+        public Point_CtorsIgnoreJson(int x, int y)
         {
             X = 40;
             Y = 60;
@@ -1601,6 +1586,8 @@ namespace System.Text.Json.Serialization.Tests
 
     public class SimpleClassWithParameterizedCtor_GenericDictionary_JsonElementExt
     {
+        public int X { get; }
+
         [JsonExtensionData]
         public Dictionary<string, JsonElement> ExtensionData { get; set; }
 
@@ -1610,6 +1597,8 @@ namespace System.Text.Json.Serialization.Tests
 
     public class SimpleClassWithParameterizedCtor_GenericDictionary_ObjectExt
     {
+        public int X { get; }
+
         [JsonExtensionData]
         public Dictionary<string, object> ExtensionData { get; set; }
 
@@ -1619,6 +1608,8 @@ namespace System.Text.Json.Serialization.Tests
 
     public class SimpleClassWithParameterizedCtor_GenericIDictionary_JsonElementExt
     {
+        public int X { get; }
+
         [JsonExtensionData]
         public IDictionary<string, JsonElement> ExtensionData { get; set; }
 
@@ -1628,6 +1619,8 @@ namespace System.Text.Json.Serialization.Tests
 
     public class SimpleClassWithParameterizedCtor_GenericIDictionary_ObjectExt
     {
+        public int X { get; }
+
         [JsonExtensionData]
         public IDictionary<string, object> ExtensionData { get; set; }
 
@@ -1637,6 +1630,8 @@ namespace System.Text.Json.Serialization.Tests
 
     public class SimpleClassWithParameterizedCtor_Derived_GenericDictionary_JsonElementExt
     {
+        public int X { get; }
+
         [JsonExtensionData]
         public DerivedGenericDictionary_JsonElementExt ExtensionData { get; set; }
 
@@ -1648,6 +1643,8 @@ namespace System.Text.Json.Serialization.Tests
 
     public class SimpleClassWithParameterizedCtor_Derived_GenericDictionary_ObjectExt
     {
+        public int X { get; }
+
         [JsonExtensionData]
         public StringToGenericDictionaryWrapper<object> ExtensionData { get; set; }
 
@@ -1657,6 +1654,8 @@ namespace System.Text.Json.Serialization.Tests
 
     public class SimpleClassWithParameterizedCtor_Derived_GenericIDictionary_JsonElementExt
     {
+        public int X { get; }
+
         [JsonExtensionData]
         public GenericIDictionaryWrapper<string, JsonElement> ExtensionData { get; set; }
 
@@ -1666,6 +1665,8 @@ namespace System.Text.Json.Serialization.Tests
 
     public class SimpleClassWithParameterizedCtor_Derived_GenericIDictionary_ObjectExt
     {
+        public int X { get; }
+
         [JsonExtensionData]
         public GenericIDictionaryWrapper<string, object> ExtensionData { get; set; }
 
@@ -1878,5 +1879,92 @@ namespace System.Text.Json.Serialization.Tests
             MyTuple.Item6.Verify();
             MyTuple.Item7.Verify();
         }
+    }
+
+    public class Point_MembersHave_JsonPropertyName : ITestClass
+    {
+        [JsonPropertyName("XValue")]
+        public int X { get; }
+
+        [JsonPropertyName("YValue")]
+        public int Y { get; }
+
+        public Point_MembersHave_JsonPropertyName(int x, int y) => (X, Y) = (x, y);
+
+        public void Initialize() { }
+
+        public static readonly string s_json = @"{""XValue"":1,""YValue"":2}";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Verify()
+        {
+            Assert.Equal(1, X);
+            Assert.Equal(2, Y);
+        }
+    }
+
+    public class Point_MembersHave_JsonConverter : ITestClass
+    {
+        [JsonConverter(typeof(ConverterForInt32))]
+        public int X { get; }
+
+        [JsonConverter(typeof(ConverterForInt32))]
+        public int Y { get; }
+
+        public Point_MembersHave_JsonConverter(int x, int y) => (X, Y) = (x, y);
+
+        public void Initialize() { }
+
+        public static readonly string s_json = @"{""X"":1,""Y"":2}";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Verify()
+        {
+            Assert.Equal(25, X);
+            Assert.Equal(25, Y);
+        }
+    }
+
+    public class Point_MembersHave_JsonIgnore : ITestClass
+    {
+        [JsonIgnore]
+        public int X { get; }
+
+        [JsonIgnore]
+        public int Y { get; }
+
+        public Point_MembersHave_JsonIgnore(int x, int y = 5) => (X, Y) = (x, y);
+
+        public void Initialize() { }
+
+        public static readonly string s_json = @"{""X"":1,""Y"":2}";
+
+        public static readonly byte[] s_data = Encoding.UTF8.GetBytes(s_json);
+
+        public void Verify()
+        {
+            Assert.Equal(0, X);
+            Assert.Equal(0, Y); // We don't set parameter default value here.
+        }
+    }
+
+    public class Point_MultipleMembers_BindTo_OneConstructorParameter
+    {
+        public int X { get; }
+
+        public int x { get; }
+
+        public Point_MultipleMembers_BindTo_OneConstructorParameter(int X, int x) { }
+    }
+
+    public class Point_MultipleMembers_BindTo_OneConstructorParameter_Variant
+    {
+        public int X { get; }
+
+        public int x { get; }
+
+        public Point_MultipleMembers_BindTo_OneConstructorParameter_Variant(int x) { }
     }
 }

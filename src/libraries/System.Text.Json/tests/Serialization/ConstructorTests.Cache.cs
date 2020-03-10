@@ -158,6 +158,7 @@ namespace System.Text.Json.Serialization.Tests
 
             Guid id = Guid.Parse("270bb22b-4816-4bd9-9acd-8ec5b1a896d3");
             yield return new object[] { new Parameterized_Person_Simple(id), new object[] { id } };
+            yield return new object[] { new Point_MembersHave_JsonPropertyName(1, 2), new object[] { 1, 2 } };
         }
     }
 }
