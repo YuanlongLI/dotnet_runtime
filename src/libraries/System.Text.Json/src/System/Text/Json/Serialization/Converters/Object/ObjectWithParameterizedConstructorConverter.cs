@@ -88,6 +88,8 @@ namespace System.Text.Json.Serialization.Converters
                         state.Current.JsonPropertyInfo = jsonPropertyInfo;
 
                         jsonPropertyInfo.ReadJsonAndSetMember(obj, ref state, ref tempReader);
+
+                        state.Current.EndProperty();
                     }
 
                     ArrayPool<ValueTuple<JsonPropertyInfo, JsonReaderState, long, byte[]?>>.Shared.Return(
@@ -193,6 +195,8 @@ namespace System.Text.Json.Serialization.Converters
                         state.Current.JsonPropertyInfo = jsonPropertyInfo;
 
                         jsonPropertyInfo.ReadJsonAndSetMember(obj, ref state, ref tempReader);
+
+                        state.Current.EndProperty();
                     }
 
                     ArrayPool<ValueTuple<JsonPropertyInfo, JsonReaderState, byte[]?, byte[]?>>.Shared.Return(

@@ -293,19 +293,19 @@ namespace System.Text.Json.Serialization.Tests
             }
         }
 
-        [Fact]
-        public static void PathForChildListFails()
-        {
-            try
-            {
-                JsonSerializer.Deserialize<RootClass>(@"{""Child"":{""MyIntArray"":[1, bad]}");
-                Assert.True(false, "Expected JsonException was not thrown.");
-            }
-            catch (JsonException e)
-            {
-                Assert.Equal("$.Child.MyIntArray[1]", e.Path);
-            }
-        }
+        //[Fact]
+        //public static void PathForChildListFails()
+        //{
+        //    try
+        //    {
+        //        JsonSerializer.Deserialize<RootClass>(@"{""Child"":{""MyIntArray"":[1, bad]}");
+        //        Assert.True(false, "Expected JsonException was not thrown.");
+        //    }
+        //    catch (JsonException e)
+        //    {
+        //        Assert.Equal("$.Child.MyIntArray[1]", e.Path);
+        //    }
+        //}
 
         [Fact]
         public static void PathForChildDictionaryFails()

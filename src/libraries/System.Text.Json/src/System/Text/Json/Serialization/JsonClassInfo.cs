@@ -97,7 +97,7 @@ namespace System.Text.Json
                 case ClassType.Object:
                     {
                         // Create the policy property.
-                        PolicyProperty = CreatePolicyProperty(type, runtimeType, converter!, options);
+                        PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(type, runtimeType, converter!, options);
 
                         CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
 

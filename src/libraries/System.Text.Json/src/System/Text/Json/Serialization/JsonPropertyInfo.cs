@@ -232,7 +232,7 @@ namespace System.Text.Json
         public bool ReadJsonExtensionDataValue(ref ReadStack state, ref Utf8JsonReader reader, out JsonElement value)
         {
             JsonConverter<JsonElement> converter = (JsonConverter<JsonElement>)
-                state.Current.JsonPropertyInfo!.RuntimeClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase;
+                state.Current.JsonPropertyInfo!.RuntimeClassInfo.ElementClassInfo!.PropertyInfoForClassInfo!.ConverterBase;
 
             if (!converter.TryRead(ref reader, typeof(JsonElement), Options, ref state, out JsonElement jsonElement))
             {
@@ -254,7 +254,7 @@ namespace System.Text.Json
             }
 
             JsonConverter<object> converter = (JsonConverter<object>)
-                state.Current.JsonPropertyInfo!.RuntimeClassInfo.ElementClassInfo!.PolicyProperty!.ConverterBase;
+                state.Current.JsonPropertyInfo!.RuntimeClassInfo.ElementClassInfo!.PropertyInfoForClassInfo!.ConverterBase;
 
             if (!converter.TryRead(ref reader, typeof(JsonElement), Options, ref state, out object? obj))
             {
