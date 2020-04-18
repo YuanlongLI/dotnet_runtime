@@ -31,6 +31,11 @@ namespace System.Text.Json.Serialization.Converters
             state.Current.ReturnValue = GetCreatorDelegate(options)((Dictionary<string, TValue>)state.Current.ReturnValue!);
         }
 
+        internal override object Convert(object value, JsonSerializerOptions options)
+        {
+            return GetCreatorDelegate(options)((Dictionary<string, TValue>)value);
+        }
+
         protected internal override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
         {
             IEnumerator<KeyValuePair<string, TValue>> enumerator;
