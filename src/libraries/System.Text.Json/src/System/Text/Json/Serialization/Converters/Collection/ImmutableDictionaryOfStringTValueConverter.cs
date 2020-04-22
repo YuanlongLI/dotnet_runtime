@@ -89,5 +89,7 @@ namespace System.Text.Json.Serialization.Converters
 
             return _creatorDelegate;
         }
+
+        internal override bool IsImmutableDictionary => true;
     }
 }

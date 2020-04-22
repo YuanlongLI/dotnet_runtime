@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace System.Text.Json.Serialization
@@ -37,6 +38,8 @@ namespace System.Text.Json.Serialization
         internal abstract JsonPropertyInfo CreateJsonPropertyInfo();
 
         internal abstract JsonParameterInfo CreateJsonParameterInfo();
+
+        internal abstract object CreateDictionaryOfStringT();
 
         internal abstract Type? ElementType { get; }
 
@@ -80,7 +83,8 @@ namespace System.Text.Json.Serialization
 
         internal ConstructorInfo? ConstructorInfo { get; set; }
 
-        internal virtual object Convert(object value, JsonSerializerOptions options)
-            => value;
+        internal virtual object Convert(object value, JsonSerializerOptions options) => value;
+
+        internal virtual bool IsImmutableDictionary { get; set; }
     }
 }
