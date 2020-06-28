@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 namespace System.Text.Json
@@ -54,6 +55,24 @@ namespace System.Text.Json
 
             writer.Flush();
             return success;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void WriteDictionaryStringKey(Utf8JsonWriter writer, string value, JsonSerializerOptions options, ref WriteStack state)
+        {
+            Debug.Assert(value != null);
+
+            if (options.DictionaryKeyPolicy != null && !state.Current.IgnoreDictionaryKeyPolicy)
+            {
+                value = options.DictionaryKeyPolicy.ConvertName(value);
+
+                if (value == null)
+                {
+                    ThrowHelper.ThrowInvalidOperationException_NamingPolicyReturnNull(options.DictionaryKeyPolicy);
+                }
+            }
+
+            writer.WritePropertyName(value);
         }
     }
 }

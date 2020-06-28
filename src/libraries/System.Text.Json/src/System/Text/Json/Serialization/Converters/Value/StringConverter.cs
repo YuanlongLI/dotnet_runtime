@@ -25,17 +25,7 @@ namespace System.Text.Json.Serialization.Converters
 
         internal override void WriteWithQuotes(Utf8JsonWriter writer, [DisallowNull] string? value, JsonSerializerOptions options, ref WriteStack state)
         {
-            if (options.DictionaryKeyPolicy != null && !state.Current.IgnoreDictionaryKeyPolicy)
-            {
-                value = options.DictionaryKeyPolicy.ConvertName(value);
-
-                if (value == null)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_NamingPolicyReturnNull(options.DictionaryKeyPolicy);
-                }
-            }
-
-            writer.WritePropertyName(value);
+            JsonSerializer.WriteDictionaryStringKey(writer, value, options, ref state);
         }
     }
 }

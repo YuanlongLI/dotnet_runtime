@@ -84,8 +84,7 @@ namespace System.Text.Json.Serialization.Converters
                     // Optimize for string since that's the hot path.
                     if (key is string keyString)
                     {
-                        JsonConverter<string> stringKeyConverter = GetKeyConverter(options);
-                        stringKeyConverter.WriteWithQuotes(writer, keyString, options, ref state);
+                        JsonSerializer.WriteDictionaryStringKey(writer, keyString, options, ref state);
                     }
                     else
                     {
